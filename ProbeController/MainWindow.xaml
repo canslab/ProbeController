@@ -1,0 +1,42 @@
+﻿<Window x:Class="ProbeController.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ProbeController"
+        mc:Ignorable="d"
+        Title="Probe Main Controller" Height="450" Width="1000" MinHeight="450" MinWidth="1000" MaxHeight="450" MaxWidth="1000">
+    <Grid>
+        <Image x:Name="frame" HorizontalAlignment="Left" Height="360"  Margin="15,10,0,0" VerticalAlignment="Top" Width="480" MouseLeftButtonDown="frame_MouseLeftButtonDown"/>
+        <StackPanel Name="buttonFrame" HorizontalAlignment="Left" Height="Auto" Margin="500,10,0,0" VerticalAlignment="Top" MinWidth="100" Orientation="Vertical">
+            <Button x:Name="startStreamButton" Content="Start Stream" Click="startStreamButton_Click" Margin="4" MinHeight="40" />
+            <Button x:Name="endStreamButton" Content="End Stream" Click="button_Click" Margin="4" MinHeight="40"/>
+
+        </StackPanel>
+        <StackPanel HorizontalAlignment="Left" Height="Auto" Margin="612,15,0,0" VerticalAlignment="Top" Width="Auto" Orientation="Vertical">
+            <StackPanel Height="Auto" Orientation="Horizontal" HorizontalAlignment="Center" Margin="4">
+                <Label x:Name="ipLabel" Content="IP Address"  MinWidth= "70" Height="Auto" VerticalAlignment="Top"/>
+                <TextBox x:Name="ipTextBox" TextWrapping="Wrap" Height="Auto" MinWidth="120"/>
+
+
+
+            </StackPanel>
+            <StackPanel Height="Auto" Orientation="Horizontal" HorizontalAlignment="Center" Margin="4">
+                <Label x:Name="portLabel" Content="Port"  MinWidth= "70" Height="Auto" Margin="0,0,0,-0.4" VerticalAlignment="Top"/>
+                <TextBox x:Name="portTextBox" TextWrapping="Wrap" Height="Auto" MinWidth="120"/>
+
+
+
+            </StackPanel>
+        </StackPanel>
+        <StackPanel HorizontalAlignment="Left" Height="Auto" Margin="839,10,0,0" VerticalAlignment="Top" Width="Auto">
+            <Button x:Name="connectButton" Content="Connect" MinHeight="40" MinWidth="100" Margin="4"/>
+            <Button x:Name="disconnectButton" Content="Disconnect" MinHeight="40" MinWidth="100" Margin="4"/>
+
+
+
+        </StackPanel>
+
+    </Grid>
+
+</Window>
