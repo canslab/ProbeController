@@ -30,8 +30,8 @@ namespace Streamer
         public BitmapFrame GetFrameAsBitmapFrame()
         {
             byte[] recvFrameAsBytes = GetFrameBytes();
-            mMemoryStream = new MemoryStream(recvFrameAsBytes);
-            mDecoder = new JpegBitmapDecoder(mMemoryStream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
+            MemoryStream mMemoryStream = new MemoryStream(recvFrameAsBytes);
+            JpegBitmapDecoder mDecoder = new JpegBitmapDecoder(mMemoryStream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
 
             return mDecoder.Frames[0];
         }
@@ -40,6 +40,7 @@ namespace Streamer
         {
             int startLocation = -1;
             int endLocation = -1;
+            mStream.Flush();
 
             while(true)
             {
@@ -47,10 +48,10 @@ namespace Streamer
                 //mBuffer.Append(firstBuffer, 0, nRead);
                 mBuffer.AppendDataFromBinaryReader(mReader, 100000);
 
-                startLocation = mBuffer.FindIndex(0, soi);
+                startLocation = mBuffer.FindPattern(0, soi);
                 if (startLocation != -1)
                 {
-                    endLocation = mBuffer.FindIndex(startLocation, eoi);
+                    endLocation = mBuffer.FindPattern(startLocation, eoi);
                 }
 
                 if(startLocation != -1 && endLocation !=-1)
@@ -77,11 +78,9 @@ namespace Streamer
             mReader.Dispose();
         }
 
-        private readonly byte[] soi = { 0xff, 0xd8 };
-        private readonly byte[] eoi = { 0xff, 0xd9 };
+        private static byte[] soi = { 0xff, 0xd8 };
+        private static byte[] eoi = { 0xff, 0xd9 };
         
-        private JpegBitmapDecoder mDecoder;
-        private MemoryStream mMemoryStream;
         private MemoryBuffer mBuffer;
         private MemoryBuffer mImageBuffer;
         private WebRequest mWebRequest;

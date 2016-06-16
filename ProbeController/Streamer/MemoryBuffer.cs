@@ -81,7 +81,7 @@ namespace Streamer
                 mBuffer[toIndex + i] = mBuffer[fromIndex + i];
             });
         }
-        public int FindIndex(int from, byte[] pattern)
+        public int FindPattern(int from, byte[] pattern)
         {
             int index = -1;
 
