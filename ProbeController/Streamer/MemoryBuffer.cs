@@ -9,78 +9,81 @@ namespace Streamer
         /********************************************************************/
         /*******            Constructrs                                 *****/
         /********************************************************************/
-        public MemoryBuffer(int capacity)
+        /// <summary>
+        /// Creates memory object and its initial size is given by the first parameter.
+        /// </summary>
+        /// <param name="initialCapacity"> initial capacity in bytes</param>
+        public MemoryBuffer(int initialCapacity)
         {
-            mBuffer = new byte[capacity];
+            mBuffer = new byte[initialCapacity];
             mCount = 0;
         }
-        /// <summary>
-        /// CAUTION : Shallow Copy... Do NOT EXPECT DEEP COPY
-        /// </summary>
-        /// <param name="sourceMemory"></param>
-        /// <param name="count"></param>
-        public MemoryBuffer(byte[] sourceMemory, int count)
-        {
-            mBuffer = sourceMemory;
-            mCount = count;
-        }
-
+        
         /********************************************************************/
         /*******            Public Methods                              *****/
         /********************************************************************/
+        /// <summary>
+        /// It appends data from BinaryReader up to #(nSize) bytes
+        /// 
+        /// </summary>
+        /// <param name="reader"> BinaryReader that will be read up to (nSize) bytes</param>
+        /// <param name="nSize"> total # of bytes to be read from BinaryReader and appended </param>
+        /// <returns> If either reader is null or nSize is negative, it returns false </returns>
         public bool AppendDataFromBinaryReader(BinaryReader reader, int nSize)
         {
-            bool retResult = false;
-
-            if (reader == null)
+            if (reader == null || nSize < 0)
             {
-                retResult = false;
+                return false;
             }
+
             int moreRequiredSize = nSize - RemainingSpace;
             if (moreRequiredSize > 0)
             {
-                Array.Resize<byte>(ref mBuffer, Capacity + moreRequiredSize);
+                Array.Resize(ref mBuffer, Capacity + moreRequiredSize);
             }
 
             int readSize = reader.Read(mBuffer, mCount, nSize);
             mCount += readSize;
 
-            return retResult;
+            return true;
         }
-        public void Append(byte[] target, int targetStartIndex, int size)
+        /// <summary>
+        /// It appends data from sourceBuffer(index starts from sourceBufferFromIndex) up to #(totalLength) bytes
+        /// 
+        /// </summary>
+        /// <param name="sourceBuffer"> Source Buffer </param>
+        /// <param name="sourceBufferFromIndex"> The start index of sourceBuffer </param>
+        /// <param name="totalLength"> The total # of bytes to be appended </param>
+        public void Append(byte[] sourceBuffer, int sourceBufferFromIndex, int totalLength)
         {
-            int moreRequiredSize = size - RemainingSpace;
+            int moreRequiredSize = totalLength - RemainingSpace;
 
             if (moreRequiredSize > 0)
             {
-                Array.Resize<byte>(ref mBuffer, Capacity + moreRequiredSize);
+                Array.Resize(ref mBuffer, Capacity + moreRequiredSize);
             }
-            Array.Copy(target, targetStartIndex, mBuffer, mCount, size);
-            mCount += size;
+            Array.Copy(sourceBuffer, sourceBufferFromIndex, mBuffer, mCount, totalLength);
+            mCount += totalLength;
         }
+        /// <summary>
+        /// This clears buffer, internally it doesn't mainpulate buffer directly, it just set count variable to 0
+        /// In the other words, this is shallow deletion..
+        /// </summary>
         public void ClearContents()
         {
             mCount = 0;
         }
-        public void WriteValueToRange(int fromInclusive, int toExclusive, byte value)
-        {
-            Parallel.For(fromInclusive, toExclusive, (i) =>
-            {
-                mBuffer[i] = 0;
-            });
-        }
-        public void MoveWithInBufferAndChangeCount(int fromIndex, int fromLength, int toIndex)
-        {
-            MoveWithinBuffer(fromIndex, fromLength, toIndex);
-            mCount = fromLength;
-        }
-        public void MoveWithinBuffer(int fromIndex, int fromLength, int toIndex)
-        {
-            Parallel.For(0, fromLength, (i) =>
-            {
-                mBuffer[toIndex + i] = mBuffer[fromIndex + i];
-            });
-        }
+  
+        /// <summary>
+        /// It finds given pattern within this buffer
+        /// 
+        /// ex) pattern = {0xff, 0xfd8}, this buffer = {0xaa, 0xbb, 0xff, 0xd8, 0xd9}
+        ///     it returns 2
+        /// 
+        /// </summary>
+        /// <param name="from"> Search task starts from this number </param>
+        /// <param name="pattern"> The pattern to be found </param>
+        /// <returns> The found index of the pattern. If this function fails, it returns -1 </returns>
         public int FindPattern(int from, byte[] pattern)
         {
             int index = -1;
@@ -116,9 +119,21 @@ namespace Streamer
         /********************************************************************/
         /*******            Properties                                  *****/
         /********************************************************************/
+        /// <summary>
+        /// It indicates how many bytes are in this buffer 
+        /// </summary>
         public int Count { get { return mCount; } }
+        /// <summary>
+        /// It indicates the total number of bytes this buffer can store.
+        /// </summary>
         public int Capacity { get { return mBuffer.Length; } }
-        public int RemainingSpace { get { return Capacity - Count; } }
+        /// <summary>
+        /// It indicates the remaining space in bytes
+        /// </summary>
+        public int RemainingSpace { get { return mBuffer.Length - mCount; } }
+        /// <summary>
+        /// This is the internal buffer reference. 
+        /// </summary>
         public byte[] Buffer { get { return mBuffer; } }
 
         /********************************************************************/
