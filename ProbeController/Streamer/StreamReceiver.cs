@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 
 namespace Streamer
@@ -14,13 +15,16 @@ namespace Streamer
     /// </summary>
     class StreamReceiver
     {
+        /********************************************************************/
+        /*******            Constructrs                                 *****/
+        /********************************************************************/
         /// <summary>
         /// instantiate StreamReceiver object 
         /// to perfrom real time streaming job
         /// 
         /// </summary>
         /// <param name="url"> ip camera url address </param>
-        public StreamReceiver(string url)
+        public StreamReceiver()
         {
             // 39 KB buffer
             mBuffer = new MemoryBuffer(40000);
@@ -28,17 +32,56 @@ namespace Streamer
             // 97 KB image buffer
             mImageBuffer = new MemoryBuffer(100000);
 
-            // make web request. 
-            WebRequest mWebRequest = WebRequest.Create(url);
+            // init mReader 
+            mReader = null;
+        }
+
+
+        /********************************************************************/
+        /*******            Public Methods                              *****/
+        /********************************************************************/
+        /// <summary>
+        /// Connect to remote IP camera using given 'url' asynchronously
+        /// </summary>
+        /// <param name="url"> The Url address of the remote ip camera </param>
+        /// <returns> Task </returns>
+        public async Task<bool> ConnectAsync(string url)
+        {
+            if (IsConnected == true)
+            {
+                // if it is connected, first disconnect the current connection, 
+                // and newly connect to the ipcamera by using given url.
+                Disconnect();
+            }
+
+            // make web request. It's like a connection trial.
+            WebRequest webRequest = WebRequest.Create(url);
 
             // get the response from web request 
-            WebResponse mWebResponse = mWebRequest.GetResponse();
-            
-            // get the stream from WebResponse
-            Stream mStream = mWebResponse.GetResponseStream();
+            WebResponse webResponse = null;
 
+            try
+            {
+                // it can take some time..... 
+                webResponse = await webRequest.GetResponseAsync();
+            }
+            catch(WebException e)
+            {
+                // WebException has occured because it can't connect to Ip camera.
+                webResponse = null;              
+                
+                // just return false
+                return false;
+            }
+
+            // get the stream from WebResponse
+            Stream stream = webResponse.GetResponseStream();
+            
             // make binary reader using web stream
-            mReader = new BinaryReader(mStream);
+            mReader = new BinaryReader(stream);
+
+            // connection success
+            return true;
         }
 
         /// <summary>
@@ -49,27 +92,65 @@ namespace Streamer
         public void GetFrameAsMat(out Mat outputMat)
         {
             byte[] recvFrameAsByteArray = null;
-
-            GetFrameBytes(out recvFrameAsByteArray);
+            
+            getFrameBytes(out recvFrameAsByteArray);
             outputMat = Cv2.ImDecode(recvFrameAsByteArray, ImreadModes.Unchanged);
         }
 
-        public BitmapFrame GetFrameAsBitmapFrame()
+        /// <summary>
+        /// Grabs a frame as a BitmapFrame
+        /// </summary
+        public void GetFrameAsBitmapFrame(out BitmapFrame outputBitmapFrame)
         {
             byte[] recvFrameAsBytes = null;
-            GetFrameBytes(out recvFrameAsBytes);
+            getFrameBytes(out recvFrameAsBytes);
             MemoryStream mMemoryStream = new MemoryStream(recvFrameAsBytes);
             JpegBitmapDecoder mDecoder = new JpegBitmapDecoder(mMemoryStream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
 
-            return mDecoder.Frames[0];
+            outputBitmapFrame = mDecoder.Frames[0];
+        }
+                
+        /// <summary>
+        /// Terminates this object 
+        /// </summary>
+        public void Disconnect()
+        {
+            // clear all buffers
+            mBuffer.ClearContents();
+            mImageBuffer.ClearContents();
+
+            // dispose BinaryReader 
+            mReader.Dispose();
+            // make mReader null
+            mReader = null;
+        }
+        /********************************************************************/
+        /*******            Properties                                  *****/
+        /********************************************************************/
+        public bool IsConnected
+        {
+            get
+            {
+                if ( mReader != null && mReader.BaseStream != null)
+                {
+                    return true;
+                }            
+                else
+                {
+                    return false;
+                }
+            }
         }
 
+        /********************************************************************/
+        /*******            Private Methods                             *****/
+        /********************************************************************/
         /// <summary>
         /// Get a frame as byte[] 
         /// It is a private method and invoked by GetFrameAsMat()
         /// </summary>
         /// <returns> output byte </returns>
-        private void GetFrameBytes(out byte[] outputFrame)
+        private void getFrameBytes(out byte[] outputFrame)
         {
             int startFlagLocation = -1;
             int endFlagLocation = -1;
@@ -80,13 +161,13 @@ namespace Streamer
                 mBuffer.AppendDataFromBinaryReader(mReader, 100000);
 
                 // find the start flag of JPEG Format
-                startFlagLocation = mBuffer.FindPattern(0, soi);
+                startFlagLocation = mBuffer.FindPattern(0, SOI);
 
                 // if the star flag has been found, we should find the end flag 
                 if (startFlagLocation != -1)
                 {
                     // start search task from startLocation in order to make sure that startLocation < endLocation
-                    endFlagLocation = mBuffer.FindPattern(startFlagLocation, eoi);
+                    endFlagLocation = mBuffer.FindPattern(startFlagLocation, EOI);
                 }
 
                 if (startFlagLocation != -1 && endFlagLocation != -1)
@@ -106,25 +187,21 @@ namespace Streamer
             outputFrame = mImageBuffer.Buffer;
         }
 
-        /// <summary>
-        /// Terminates this object 
-        /// </summary>
-        public void Close()
-        {
-            mBuffer = null;
-            mImageBuffer = null;
-            mReader.Close();
-        }
-
+        /********************************************************************/
+        /*******            Private CONSTANTS                           *****/
+        /********************************************************************/
         /// <summary>
         /// soi means the start flags of JPEG Format
         /// </summary>
-        private static byte[] soi = { 0xff, 0xd8 };
+        private static byte[] SOI = { 0xff, 0xd8 };
         /// <summary>
         /// eoi means the end flags of JPEG Format
         /// </summary>
-        private static byte[] eoi = { 0xff, 0xd9 };
-        
+        private static byte[] EOI = { 0xff, 0xd9 };
+
+        /********************************************************************/
+        /*******            Private variables                           *****/
+        /********************************************************************/
         /// <summary>
         /// This buffer is used to receive data directly from BinaryReader
         /// </summary>
@@ -133,6 +210,9 @@ namespace Streamer
         /// This buffer is used to make 
         /// </summary>
         private MemoryBuffer mImageBuffer;
+        /// <summary>
+        /// It is a stream that is used to receive data from the remote IP camera.
+        /// </summary>
         private BinaryReader mReader;
     }
 }
