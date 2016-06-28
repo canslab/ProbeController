@@ -7,7 +7,7 @@ using Streamer;
 using System.Windows.Threading;
 
 namespace ProbeController
-{
+{ 
     public partial class MainWindow : Window
     {
         private static WriteableBitmap _wb = new WriteableBitmap(640, 480, 96, 96, PixelFormats.Bgr24, null);
