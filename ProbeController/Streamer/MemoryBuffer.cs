@@ -4,6 +4,10 @@ using System.Threading.Tasks;
 
 namespace Streamer
 {
+    /// <summary>
+    /// It encapsulates memory buffer
+    /// It is very easy to use. 
+    /// </summary>
     class MemoryBuffer
     {
         /********************************************************************/

@@ -36,7 +36,6 @@ namespace Streamer
             mReader = null;
         }
 
-
         /********************************************************************/
         /*******            Public Methods                              *****/
         /********************************************************************/
@@ -45,7 +44,7 @@ namespace Streamer
         /// </summary>
         /// <param name="url"> The Url address of the remote ip camera </param>
         /// <returns> Task </returns>
-        public async Task<bool> ConnectAsync(string url)
+        public async Task<bool> ConnectToURLAsync(string url)
         {
             if (IsConnected == true)
             {
@@ -84,17 +83,26 @@ namespace Streamer
             return true;
         }
 
+    
         /// <summary>
-        /// Grabs a frame as a OpenCVSharp.Mat 
+        /// Grab a Frame as a OpenCVSharp.Mat from the remote IP camera
         /// 
         /// </summary>
-        /// <param name="outputMat"> This is a output frame </param>
-        public void GetFrameAsMat(out Mat outputMat)
+        /// <returns> A grabbed Frame </returns>
+        public async Task<Mat> GetFrameAsMatAsync()
         {
-            byte[] recvFrameAsByteArray = null;
-            
-            getFrameBytes(out recvFrameAsByteArray);
-            outputMat = Cv2.ImDecode(recvFrameAsByteArray, ImreadModes.Unchanged);
+            Mat returnMat = null;
+
+            // async job 
+            returnMat = await Task<Mat>.Factory.StartNew(() =>
+            {
+                byte[] resultFrameAsByteArray = null;
+                getFrameBytes(out resultFrameAsByteArray);
+
+                return Cv2.ImDecode(resultFrameAsByteArray, ImreadModes.Unchanged);
+            });
+
+            return returnMat;
         }
 
         /// <summary>
@@ -121,12 +129,16 @@ namespace Streamer
 
             // dispose BinaryReader 
             mReader.Dispose();
+            mReader.Close();
             // make mReader null
             mReader = null;
         }
         /********************************************************************/
         /*******            Properties                                  *****/
         /********************************************************************/
+        /// <summary>
+        /// Check whether this StreamReceiver is connected or not
+        /// </summary>
         public bool IsConnected
         {
             get
@@ -146,7 +158,9 @@ namespace Streamer
         /*******            Private Methods                             *****/
         /********************************************************************/
         /// <summary>
-        /// Get a frame as byte[] 
+        /// Get a frame as byte[], and it is synchronous method.
+        /// So if you call this method, you can be stucked.
+        /// 
         /// It is a private method and invoked by GetFrameAsMat()
         /// </summary>
         /// <returns> output byte </returns>
