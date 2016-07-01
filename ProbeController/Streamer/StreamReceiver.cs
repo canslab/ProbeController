@@ -82,7 +82,6 @@ namespace Streamer
             // connection success
             return true;
         }
-
     
         /// <summary>
         /// Grab a Frame as a OpenCVSharp.Mat from the remote IP camera
@@ -164,7 +163,7 @@ namespace Streamer
         /// It is a private method and invoked by GetFrameAsMat()
         /// </summary>
         /// <returns> output byte </returns>
-        private void getFrameBytes(out byte[] outputFrame)
+        private void getFrameBytes(out byte[] outputFrame) 
         {
             int startFlagLocation = -1;
             int endFlagLocation = -1;
