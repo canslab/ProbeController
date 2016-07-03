@@ -6,12 +6,16 @@ using System.Windows.Media.Imaging;
 using Streamer;
 using System.Windows.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Text;
+using ProbeController.Robot;
 
 namespace ProbeController
 { 
     public partial class MainWindow : Window
     {
-        // Constants related to frame 
+        // Constants related to frame
         private static int FRAME_WIDTH = 640;
         private static int FRAME_HEIGHT = 480;
         private static int FRAME_DPI_X = 96;
@@ -19,7 +23,7 @@ namespace ProbeController
 
         private WriteableBitmap mWb;
         private StreamReceiver mStreamReceiver;
-        private Robot.RobotCommunicator mCommunicator;
+        private RobotCommunicator mCommunicator;
 
         /// <summary>
         /// whether the streaming job is working or not.
@@ -44,6 +48,7 @@ namespace ProbeController
         }
         protected override void OnInitialized(EventArgs e)
         {
+            //EventManager.RegisterClassHandler(typeof())
             base.OnInitialized(e);
         }
 
@@ -131,7 +136,7 @@ namespace ProbeController
                 return;
             }
 
-            bool bConnectionSuccess = await mCommunicator.ConnectAsync(ipTextBox.Text, int.Parse(portTextBox.Text));
+            bool bConnectionSuccess = await mCommunicator.ConnectToURLAsync(ipTextBox.Text, int.Parse(portTextBox.Text));
                         
             if (bConnectionSuccess == false)
             {
@@ -159,6 +164,16 @@ namespace ProbeController
                 connectButton.IsEnabled = true;
                 disconnectButton.IsEnabled = false;
             }
+        }
+
+        private void LeftLEDButton_Click(object sender, RoutedEventArgs e)
+        {
+            //mCommunicator.SendJSONStringAsnyc()
+        }
+
+        private void RightLEDButton_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
