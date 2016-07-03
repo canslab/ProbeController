@@ -2,7 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Streamer
+namespace JHStreamReceiver
 {
     /// <summary>
     /// It encapsulates memory buffer

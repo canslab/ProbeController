@@ -5,6 +5,8 @@ VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProbeController", "ProbeController\ProbeController.csproj", "{CCC2AF47-AD61-4315-A3D5-7B7F4BF3264D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JHStreamReceiver", "JHStreamReceiver\JHStreamReceiver.csproj", "{77C521CA-74A6-4284-AC24-35F9024E447B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{CCC2AF47-AD61-4315-A3D5-7B7F4BF3264D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CCC2AF47-AD61-4315-A3D5-7B7F4BF3264D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CCC2AF47-AD61-4315-A3D5-7B7F4BF3264D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77C521CA-74A6-4284-AC24-35F9024E447B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77C521CA-74A6-4284-AC24-35F9024E447B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77C521CA-74A6-4284-AC24-35F9024E447B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77C521CA-74A6-4284-AC24-35F9024E447B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

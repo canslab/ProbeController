@@ -18,7 +18,6 @@ namespace ProbeController.Robot
     /// </summary>
     public class RobotCommunicator
     {
-        
         public enum LedSide { LEFT_SIDE, RIGHT_SIDE };
         /************************************************************
          *           
@@ -29,7 +28,6 @@ namespace ProbeController.Robot
             return false;
 
         }
-        
         
         
         
@@ -203,6 +201,7 @@ namespace ProbeController.Robot
 
             return sentByteArray;
         }
+       
         /// <summary>
         /// Connect to the remote robot designated by IP address and port number that has already given from constructor
         /// 

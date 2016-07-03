@@ -1,11 +1,10 @@
 ﻿using OpenCvSharp;
-using System;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 
-namespace Streamer
+namespace JHStreamReceiver
 {
     /// <summary>
     /// It is the type of StreamReceiver
@@ -13,7 +12,7 @@ namespace Streamer
     /// This grabs a frame from remote IP camera.
     /// You should be aware of the URL of IP camera.
     /// </summary>
-    class StreamReceiver
+    public class StreamReceiver
     {
         /********************************************************************/
         /*******            Constructrs                                 *****/
