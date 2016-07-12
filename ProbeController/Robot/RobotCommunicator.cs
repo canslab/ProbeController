@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -18,19 +15,54 @@ namespace ProbeController.Robot
     /// </summary>
     public class RobotCommunicator
     {
-        public enum LedSide { LEFT_SIDE, RIGHT_SIDE };
-        /************************************************************
-         *           
-         * **********************************************************/
-        public bool OperateLED(LedSide side, bool bOn)
+        /// <summary>
+        /// Issues command related to robot's 2 LEDs
+        /// </summary>
+        /// <param name="side">Left side or Right side</param>
+        /// <param name="bOn"> Turn on or Off</param>
+        /// <returns> did well or not </returns>
+        public async Task<bool> IssueLEDCommandAsync(RobotProtocol.LEDSide side, bool bOn)
         {
+            string madeJsonCommand = RobotProtocol.MakeLEDCommand(side, bOn);
+            bool bDidWell = false;
 
-            return false;
+            if (madeJsonCommand == null)
+            {
+                bDidWell = false;
+            }
+            else
+            {
+                bDidWell = await SendJSONStringAsnyc(madeJsonCommand);
+            }
 
+            return bDidWell;
         }
-        
-        
-        
+
+        /// <summary>
+        /// Issusing DC Motor control command 
+        /// </summary>
+        /// <param name="leftDCMotorMode"> Left DC Motor mode (Forward, Backward, Break, Release) </param>
+        /// <param name="leftDCMotorValue"> Left DC Motor Value (0 ~ 255)</param>
+        /// <param name="rightDCMotorMode"> Right DC Motor mode (Forward, Backward, Break, Release) </param>
+        /// <param name="rightDCMotorValue"> Right DC Motor Value (0 ~ 255)</param>
+        /// <returns> did well or not </returns>
+        public async Task<bool> IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode leftDCMotorMode, int leftDCMotorValue, 
+                                                        RobotProtocol.DCMotorMode rightDCMotorMode, int rightDCMotorValue)
+        {
+            string madeJsonCommand = RobotProtocol.MakeDCMotorCommand(leftDCMotorMode, leftDCMotorValue, rightDCMotorMode, rightDCMotorValue);
+            bool bDidWell = false;
+
+            if (madeJsonCommand == null)
+            {
+                bDidWell = false;
+            }
+            else
+            {
+                bDidWell = await SendJSONStringAsnyc(madeJsonCommand);
+            }
+            return bDidWell;
+        }
+
         /// <summary>
         /// Initialize this robot object 
         /// It doesn't connect to the robot automatically, you should
@@ -95,25 +127,16 @@ namespace ProbeController.Robot
         /// connect to the other remote robot again.
         /// </summary>
         /// <returns> Whether the connection has unlinked or not</returns>
-        public bool Disconnect()
+        public void Disconnect()
         {
-            if (Connected == false)
-            {
-                return false;
-            }
-            else
-            {
-                StreamToRobot.Close();
-                ClientSocket.Close();
-                IP = null;
-                PortNumber = -1;
-                ClientSocket.Close();
+            StreamToRobot.Close();
+            ClientSocket.Close();
+            IP = null;
+            PortNumber = -1;
+            ClientSocket.Close();
 
-                // reallocate the tcp client object in order to use this Class again.
-                ClientSocket = new TcpClient();
-
-                return true;
-            }
+            // reallocate the tcp client object in order to use this Class again.
+            ClientSocket = new TcpClient();
         }
 
         /// <summary>
@@ -122,7 +145,7 @@ namespace ProbeController.Robot
         /// <param name="byteArray"> Array of byte to be sent </param>
         /// <param name="offset"> the offset of given byteArray </param>
         /// <param name="length"> the total size of bytes to be sent from byteArray </param>
-        public async Task<bool> SendRawMessage(byte[] byteArray, int offset, int length)
+        public async Task<bool> SendBytesAsync(byte[] byteArray, int offset, int length)
         {
             try
             {
@@ -130,7 +153,7 @@ namespace ProbeController.Robot
             }
             catch(Exception e)
             {
-                Debug.WriteLine("SendRawMessage() byte version error, RSN> {0}", e.Message);
+                Debug.WriteLine("SendBytesAsync() version error, RSN> {0}", e.Message);
                 return false;
             }
             return true;
@@ -143,19 +166,9 @@ namespace ProbeController.Robot
         /// <returns> Whether this function works well or not </returns>
         public async Task<bool> SendJSONStringAsnyc(string jsonString)
         {
-            try
-            {
-                byte[] jsonByteArray = makePacket(jsonString);
-                await SendRawMessage(jsonByteArray, 0, jsonByteArray.Length);
-            }
-            catch(Exception ex)
-            {
-                Debug.WriteLine("SendStringLineAsync() error.. RSN>  {0}", ex.Message);
-                return false;
-            }
-
-            return true;
-        }
+            byte[] jsonByteArray = makePacket(jsonString);
+            return await SendBytesAsync(jsonByteArray, 0, jsonByteArray.Length);
+        }          
 
         /************************************************************/
         /******                   Properties                   ******/

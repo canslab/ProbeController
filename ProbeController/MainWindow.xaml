@@ -5,7 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ProbeController"
         mc:Ignorable="d"
-        Title="Probe Main Controller" Height="600" Width="1200" MinHeight="600" MinWidth="1200" MaxHeight="600" MaxWidth="1200">
+        Title="Probe Main Controller"
+        KeyDown="onMainKeyDown"
+        Height="600" Width="1200" MinHeight="600" MinWidth="1200" MaxHeight="600" MaxWidth="1200">
     <Grid Margin="0,1,0.333,-1.333">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*"/>
@@ -33,7 +35,7 @@
                         <StackPanel Height="Auto" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5,0,10,5">
                             <Label x:Name="ipLabel" Content="IP Address"  MinWidth= "70" MinHeight="30" VerticalAlignment="Center"/>
                             <TextBox x:Name="ipTextBox" TextWrapping="NoWrap" MinWidth="110" MaxWidth="110" MinHeight="30" MaxHeight="30" Margin="0,0,10,0"  />
-                            <Button x:Name="connectButton" Content="Connect" Click="onConnectionButton" MinHeight="30" MinWidth="100" HorizontalAlignment="Center" Margin="0,0,0,0"/>
+                            <Button x:Name="connectButton" Content="Connect" Click="onConnectButton" MinHeight="30" MinWidth="100" HorizontalAlignment="Center" Margin="0,0,0,0"/>
                         </StackPanel>
                         <StackPanel Height="Auto" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5,0,10,0">
                             <Label x:Name="portLabel" Content="Port"  MinWidth= "70" MinHeight="30" Margin="0,0,0,0" VerticalAlignment="Center"/>
@@ -47,9 +49,21 @@
                         <ColumnDefinition Width="1*"/>
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
-                    <Button x:Name="LeftLEDButton" Grid.Column="0" Content="Left LED On" Click="LeftLEDButton_Click" MinHeight="40"/>
-                    <Button x:Name="RightLEDButton" Grid.Column="1" Content="Right LED On" Click="RightLEDButton_Click" MinHeight="40"/>
+                    <Button x:Name="LeftLEDButton" Grid.Column="0" Content="Left LED On" Click="onLeftLEDButton" MinHeight="40"/>
+                    <Button x:Name="RightLEDButton" Grid.Column="1" Content="Right LED On" Click="onRightLEDButton" MinHeight="40"/>
+                </Grid>
 
+                <Grid Margin="10,10,10,10" >
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="MoveLeftButton" Grid.Column="0" Content="Move Left" Click="onMoveLeftButton"  MinHeight="40"/>
+                    <Button x:Name="MoveRightButton" Grid.Column="1" Content="Move Right" Click="onMoveRightButton" MinHeight="40"/>
+                    <Button x:Name="MoveForwardButton" Grid.Column="2" Content="Move Forwrd" Click="onMoveForwardButton"  MinHeight="40"/>
+                    <Button x:Name="MoveBackwardButton" Grid.Column="3" Content="Move Backward" Click="onMoveBackwardButton" MinHeight="40"/>
                 </Grid>
             </StackPanel>
         </GroupBox>

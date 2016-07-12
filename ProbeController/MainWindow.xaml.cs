@@ -1,34 +1,30 @@
-﻿using System;
+﻿/*******************************************************************
+ * 
+ * This file only deals with the event handlers, GUI related works 
+ * 
+ * 
+ *******************************************************************/
+using System;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using JHStreamReceiver;
-using System.Windows.Threading;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using System.Collections.Generic;
-using System.Text;
 using ProbeController.Robot;
+using Cv2 = OpenCvSharp;
+using System.Threading.Tasks;
 
 namespace ProbeController
-{ 
+{
     public partial class MainWindow : Window
     {
-        // Constants related to frame
-        private static int FRAME_WIDTH = 640;
-        private static int FRAME_HEIGHT = 480;
-        private static int FRAME_DPI_X = 96;
-        private static int FRAME_DPI_Y = 96;
-
         private WriteableBitmap mWb;
+        // stream receiver
         private StreamReceiver mStreamReceiver;
+        // communicator to robot
         private RobotCommunicator mCommunicator;
-
-        /// <summary>
-        /// whether the streaming job is working or not.
-        /// </summary>
-        public bool bIsCameraWorking = false;
+        private RobotController mRobotController;
+        
 
         /// <summary>
         /// Constructor
@@ -44,7 +40,8 @@ namespace ProbeController
 
             endStreamButton.IsEnabled = false;
             disconnectButton.IsEnabled = false;
-            mCommunicator = new Robot.RobotCommunicator();
+            mCommunicator = new RobotCommunicator();
+            mRobotController = new RobotController();
         }
         protected override void OnInitialized(EventArgs e)
         {
@@ -82,7 +79,7 @@ namespace ProbeController
             // it causes this while loop expired.  
             while(bIsCameraWorking == true)
             {
-                OpenCvSharp.Mat eachFrame = null;
+                Cv2.Mat eachFrame = null;
 
                 eachFrame = await mStreamReceiver.GetFrameAsMatAsync();
                 
@@ -92,7 +89,7 @@ namespace ProbeController
                 //OpenCvSharp.Cv2.CvtColor(rr, rr, OpenCvSharp.ColorConversionCodes.GRAY2BGR);
                 // after back from async job, UI thread need to render real time image using the result matrix which is given by 
                 // async job.
-                OpenCvSharp.Extensions.WriteableBitmapConverter.ToWriteableBitmap(eachFrame, mWb);
+                Cv2.Extensions.WriteableBitmapConverter.ToWriteableBitmap(eachFrame, mWb);
 
                 // after using that, you should release it, otherwise memory leak will be occured.
                 eachFrame.Release();
@@ -110,7 +107,6 @@ namespace ProbeController
             startStreamButton.IsEnabled = true;
             endStreamButton.IsEnabled = false;
         }
-
         private void onGaussianBlurButton(object sender, RoutedEventArgs e)
         {
 
@@ -120,7 +116,7 @@ namespace ProbeController
 
         }
 
-        private async void onConnectionButton(object sender, RoutedEventArgs e)
+        private async void onConnectButton(object sender, RoutedEventArgs e)
         {
             int portNumber;
             string ipAddress;
@@ -146,34 +142,96 @@ namespace ProbeController
             {
                 disconnectButton.IsEnabled = true;
                 connectButton.IsEnabled = false;
+                bool bAttachedWell = mRobotController.AttachCommunicator(mCommunicator);
+                if (bAttachedWell == false)
+                {
+                    MessageBox.Show("Attachment task has failed!! check it!");
+                    mRobotController.DetachCommunicator();
+                }
             }
-                
         }
-
         private void onDisconnectButton(object sender, RoutedEventArgs e)
         {
-            bool bSuccess = false;
+            mCommunicator.Disconnect();
 
-            bSuccess = mCommunicator.Disconnect();
-            if (bSuccess == false)
+            connectButton.IsEnabled = true;
+            disconnectButton.IsEnabled = false;
+            
+        }
+        private async void onLeftLEDButton(object sender, RoutedEventArgs e)
+        {
+            bool bDidWell = false;
+            bDidWell = await mRobotController.TurnOnLED(RobotProtocol.LEDSide.LEFT, bLeftLEDButtonClicked);
+
+            if (bDidWell == false)
             {
-                MessageBox.Show("Disconnection task has failed");
+                MessageBox.Show("LED Turn Failed..");                
             }
             else
             {
-                connectButton.IsEnabled = true;
-                disconnectButton.IsEnabled = false;
+                bLeftLEDButtonClicked = !bLeftLEDButtonClicked;
+            }
+        }
+        private async void onRightLEDButton(object sender, RoutedEventArgs e)
+        {
+            bool bDidWell = await mRobotController.TurnOnLED(RobotProtocol.LEDSide.RIGHT, bRightLEDButtonClicked);
+            if (bDidWell == false)
+            {
+                MessageBox.Show("LED Turn Failed..");
+            }
+            else
+            {
+                bRightLEDButtonClicked = !bRightLEDButtonClicked;
             }
         }
 
-        private void LeftLEDButton_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Keyboard event handler
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void onMainKeyDown(object sender, KeyEventArgs e)
         {
-            //mCommunicator.SendJSONStringAsnyc()
+            switch(e.Key)
+            {
+                case Key.F3:
+                    await mCommunicator.IssueLEDCommandAsync(RobotProtocol.LEDSide.LEFT, bLeftLEDButtonClicked);
+                    bLeftLEDButtonClicked = !bLeftLEDButtonClicked;
+                    break;
+                case Key.F4:
+                    await mCommunicator.IssueLEDCommandAsync(RobotProtocol.LEDSide.RIGHT, bRightLEDButtonClicked);
+                    bRightLEDButtonClicked = !bRightLEDButtonClicked;
+                    break;
+                case Key.W:
+                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 200, RobotProtocol.DCMotorMode.FORWARD, 165);
+                    break;
+                case Key.A:
+                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 0, RobotProtocol.DCMotorMode.FORWARD, 150);
+                    break;
+                case Key.S:
+                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.BACKWARD, 160, RobotProtocol.DCMotorMode.BACKWARD, 165);
+                    break;
+                case Key.D:
+                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 150, RobotProtocol.DCMotorMode.FORWARD, 0);
+                    break;
+            }
         }
 
-        private void RightLEDButton_Click(object sender, RoutedEventArgs e)
+        private async void onMoveLeftButton(object sender, RoutedEventArgs e)
         {
-
+            await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 0, RobotProtocol.DCMotorMode.FORWARD, 150);
+        }
+        private async void onMoveRightButton(object sender, RoutedEventArgs e)
+        {
+            await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 150, RobotProtocol.DCMotorMode.FORWARD, 0);
+        }
+        private async void onMoveForwardButton(object sender, RoutedEventArgs e)
+        {
+            await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 200, RobotProtocol.DCMotorMode.FORWARD, 165);
+        }
+        private async void onMoveBackwardButton(object sender, RoutedEventArgs e)
+        {
+            await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.BACKWARD, 160, RobotProtocol.DCMotorMode.BACKWARD, 165);
         }
     }
 }
