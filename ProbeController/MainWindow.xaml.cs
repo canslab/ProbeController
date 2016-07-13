@@ -161,7 +161,7 @@ namespace ProbeController
         private async void onLeftLEDButton(object sender, RoutedEventArgs e)
         {
             bool bDidWell = false;
-            bDidWell = await mRobotController.TurnOnLED(RobotProtocol.LEDSide.LEFT, bLeftLEDButtonClicked);
+            bDidWell = await mRobotController.TurnOnLED(RobotProtocol.LEDSide.Left, bLeftLEDButtonClicked);
 
             if (bDidWell == false)
             {
@@ -174,7 +174,7 @@ namespace ProbeController
         }
         private async void onRightLEDButton(object sender, RoutedEventArgs e)
         {
-            bool bDidWell = await mRobotController.TurnOnLED(RobotProtocol.LEDSide.RIGHT, bRightLEDButtonClicked);
+            bool bDidWell = await mRobotController.TurnOnLED(RobotProtocol.LEDSide.Right, bRightLEDButtonClicked);
             if (bDidWell == false)
             {
                 MessageBox.Show("LED Turn Failed..");
@@ -195,28 +195,28 @@ namespace ProbeController
             switch(e.Key)
             {
                 case Key.F3:
-                    await mCommunicator.IssueLEDCommandAsync(RobotProtocol.LEDSide.LEFT, bLeftLEDButtonClicked);
+                    await mCommunicator.IssueLEDCommandAsync(RobotProtocol.LEDSide.Left, bLeftLEDButtonClicked);
                     bLeftLEDButtonClicked = !bLeftLEDButtonClicked;
                     break;
                 case Key.F4:
-                    await mCommunicator.IssueLEDCommandAsync(RobotProtocol.LEDSide.RIGHT, bRightLEDButtonClicked);
+                    await mCommunicator.IssueLEDCommandAsync(RobotProtocol.LEDSide.Right, bRightLEDButtonClicked);
                     bRightLEDButtonClicked = !bRightLEDButtonClicked;
                     break;
                 case Key.W:
-                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 200, RobotProtocol.DCMotorMode.FORWARD, 165);
+                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 200, RobotProtocol.DCMotorMode.Forward, 165);
                     break;
                 case Key.A:
                     //await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 0, RobotProtocol.DCMotorMode.FORWARD, 150);
-                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.BACKWARD, 140, RobotProtocol.DCMotorMode.FORWARD, 80);
+                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 140, RobotProtocol.DCMotorMode.Forward, 80);
 
                     break;
                 case Key.S:
-                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.BACKWARD, 160, RobotProtocol.DCMotorMode.BACKWARD, 165);
+                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 160, RobotProtocol.DCMotorMode.Backward, 165);
                     break;
                 case Key.D:
                     for(int i = 0; i < 14; ++i)
                     {
-                        await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 70, RobotProtocol.DCMotorMode.BACKWARD, 140);
+                        await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 70, RobotProtocol.DCMotorMode.Backward, 140);
                     }
                     break;
             }
@@ -224,7 +224,7 @@ namespace ProbeController
 
         private async void onMoveLeftButton(object sender, RoutedEventArgs e)
         {
-            await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 0, RobotProtocol.DCMotorMode.FORWARD, 150);
+            await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 0, RobotProtocol.DCMotorMode.Forward, 150);
         }
         private async void onMoveRightButton(object sender, RoutedEventArgs e)
         {
@@ -233,11 +233,34 @@ namespace ProbeController
         }
         private async void onMoveForwardButton(object sender, RoutedEventArgs e)
         {
-            await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 200, RobotProtocol.DCMotorMode.FORWARD, 165);
+            await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 200, RobotProtocol.DCMotorMode.Forward, 165);
         }
         private async void onMoveBackwardButton(object sender, RoutedEventArgs e)
         {
-            await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.BACKWARD, 160, RobotProtocol.DCMotorMode.BACKWARD, 165);
+            await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 160, RobotProtocol.DCMotorMode.Backward, 165);
+        }
+
+        private async void onServoButton(object sender, RoutedEventArgs e)
+        {
+            bool bDidWell = true;
+
+            double horizontalServoTheta;
+            double verticalServoTheta;
+
+            if (Double.TryParse(hServoTextBox.Text, out horizontalServoTheta) == true && Double.TryParse(vServoTextBox.Text, out verticalServoTheta))
+            {
+                bDidWell &= await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Horizontal, horizontalServoTheta);
+                bDidWell &= await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Vertical, verticalServoTheta);
+                
+                if (bDidWell == false)
+                {
+                    MessageBox.Show("Rotate of horizontal servo motor has failed.. ");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Either horizontal theta or vertical theta is invalid...");
+            }
         }
     }
 }

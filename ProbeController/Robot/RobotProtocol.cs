@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace ProbeController.Robot
@@ -22,12 +19,18 @@ namespace ProbeController.Robot
         /// <summary>
         /// LED type
         /// </summary>
-        public enum LEDSide { LEFT, RIGHT };
+        public enum LEDSide { Left, Right };
+
+        /// <summary>
+        /// The types of servo motors 
+        /// One of Horizontal, Vertical
+        /// </summary>
+        public enum ServoMotorsSide { Horizontal, Vertical }
 
         /// <summary>
         /// DC Motor Related enum
         /// </summary>
-        public enum DCMotorMode { FORWARD, BACKWARD, BREAK, RELEASE };
+        public enum DCMotorMode { Forward, Backward, Break, Release };
 
         /// <summary>
         /// It represents data packet class and it'll be used to be converted into json string
@@ -72,11 +75,11 @@ namespace ProbeController.Robot
             
             dataPacket.Target = "LED";
 
-            if(ledType == LEDSide.LEFT)
+            if(ledType == LEDSide.Left)
             {
                 dataPacket.Params.Add("Left");
             }
-            else if(ledType == LEDSide.RIGHT)
+            else if(ledType == LEDSide.Right)
             {
                 dataPacket.Params.Add("Right");
             }
@@ -92,14 +95,14 @@ namespace ProbeController.Robot
         }
 
         /// <summary>
-        /// Make DC Motors control command(=jsong string)
+        /// Make DC Motors control command(=json string)
         /// </summary>
         /// <param name="leftDCMotorMode"> mode of the left DC Motor (Forward, Backward, Break, Release)</param>
-        /// <param name="leftDCMotorValue">value of the left DC Motor(0~255)</param>
+        /// <param name="numLeftDCMotorValue">value of the left DC Motor(0~255)</param>
         /// <param name="rightDCMotorMode"> mode of the right DC Motor (Forward, Backward, Break, Release)</param>
-        /// <param name="rightDCMotorValue">value of the right DC Motor(0~255)</param>
+        /// <param name="numRightDCMotorValue">value of the right DC Motor(0~255)</param>
         /// <returns></returns>
-        public static string MakeDCMotorCommand(DCMotorMode leftDCMotorMode, int leftDCMotorValue, DCMotorMode rightDCMotorMode, int rightDCMotorValue)
+        public static string MakeDCMotorsCommand(DCMotorMode leftDCMotorMode, int numLeftDCMotorValue, DCMotorMode rightDCMotorMode, int numRightDCMotorValue)
         {
             string commandPacket = null;
             DataPacket dataPacket = new DataPacket();
@@ -108,27 +111,51 @@ namespace ProbeController.Robot
             dataPacket.Target = "DCMotors";
 
             // Left DC Motor mode & value setting
-            inputMotorData(dataPacket, leftDCMotorMode, leftDCMotorValue);
+            inputMotorData(ref dataPacket, leftDCMotorMode, numLeftDCMotorValue);
             // Right DC Motor mode & value setting
-            inputMotorData(dataPacket, rightDCMotorMode, rightDCMotorValue);
+            inputMotorData(ref dataPacket, rightDCMotorMode, numRightDCMotorValue);
             
             // serialize object before returning commandPacket
             commandPacket = JsonConvert.SerializeObject(dataPacket);
             return commandPacket;
         }
 
-        private static void inputMotorData(DataPacket dataPacket, DCMotorMode leftDCMotorMode, int leftDCMotorValue)
+        /// <summary>
+        /// Make Servo Motors control command(=json string)
+        /// </summary>
+        /// <param name="side"> The upper one or bottome one? </param>
+        /// <param name="numDutyCycle"> The value of duty cycle </param>
+        /// <returns> made JSON string(serialized packet) </returns>
+        public static string MakeServoMotorsCommand(ServoMotorsSide side, int numDutyCycle)
+        {
+            string retJSONCommand = null;
+            DataPacket dataPacket = null;
+            string strSide = null;
+
+            // convert ServoMotorsSide type to string type
+            strSide = (side == ServoMotorsSide.Horizontal) ? "Horizontal" : "Vertical";
+            
+            // make packet
+            dataPacket = new DataPacket() { Target = "ServoMotors", Params = { strSide, numDutyCycle } };
+
+            // serialize data packet which is assigned to retJSONCommand
+            retJSONCommand = JsonConvert.SerializeObject(dataPacket);
+            
+            return retJSONCommand;
+        }
+
+        private static void inputMotorData(ref DataPacket dataPacket, DCMotorMode DCMotorMode, int numDCMotorValue)
         {
             // Left DC Motor mode & value setting
-            if (leftDCMotorMode == DCMotorMode.FORWARD)
+            if (DCMotorMode == DCMotorMode.Forward)
             {
                 dataPacket.Params.Add("Forward");
             }
-            else if (leftDCMotorMode == DCMotorMode.BACKWARD)
+            else if (DCMotorMode == DCMotorMode.Backward)
             {
                 dataPacket.Params.Add("Backward");
             }
-            else if (leftDCMotorMode == DCMotorMode.BREAK)
+            else if (DCMotorMode == DCMotorMode.Break)
             {
                 dataPacket.Params.Add("Break");
             }
@@ -136,7 +163,7 @@ namespace ProbeController.Robot
             {
                 dataPacket.Params.Add("Release");
             }
-            dataPacket.Params.Add(leftDCMotorValue);
+            dataPacket.Params.Add(numDCMotorValue);
         }
     }
 }

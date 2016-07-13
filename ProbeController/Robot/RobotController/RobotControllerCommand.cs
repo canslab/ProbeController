@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace ProbeController.Robot
@@ -35,7 +36,36 @@ namespace ProbeController.Robot
             // return whether this function works well or not
             return bSucceeded;
         }
-    
+        
+        /// <summary>
+        /// Rotate Servo Motor which is specified by the first argument
+        /// and how much it'll roate by is given by the second argument
+        /// 
+        /// </summary>
+        /// <param name="whatMotor"> horizontal servo or vertical servo </param>
+        /// <param name="theta"> the value of theta </param>
+        /// <returns> whether this task succeeded or not </returns>
+        public async Task<bool> RotateServoMotors(RobotProtocol.ServoMotorsSide whatMotor, double theta)
+        {
+            bool bSucceeded = false;
+
+            var dutyCycleDouble = (whatMotor == RobotProtocol.ServoMotorsSide.Horizontal) ? (-2 * theta + 451) : (-2.27 * theta + 309);
+
+            // theta to duty cycle function is needed ... 
+            var numDutyCycle = (int)Math.Floor(dutyCycleDouble);
+
+            string madeJSONCommand = RobotProtocol.MakeServoMotorsCommand(whatMotor, numDutyCycle);
+            
+            if (madeJSONCommand == null)
+            {
+                bSucceeded = false;
+            }
+            else
+            {
+                bSucceeded = await Communicator.SendJSONStringAsnyc(madeJSONCommand);
+            }
+            return bSucceeded;
+        }
 
         public async Task<bool> FaceRobotUsingVector(Vector directionVector)
         {
@@ -87,12 +117,14 @@ namespace ProbeController.Robot
 
             return retDirection;
         }
-        
-        //public async Task<bool> MoveRobot(Vector directionVector, double duration)
-        //{
-        //    directionVector.Normalize();
+        protected int getDutyCycleWhenThetaIs(double theta)
+        {
+            int retDutyCycle = 0;
 
-        //}
 
+
+
+            return retDutyCycle;
+        }
     }
 }

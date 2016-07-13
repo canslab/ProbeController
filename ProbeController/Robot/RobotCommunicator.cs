@@ -49,7 +49,7 @@ namespace ProbeController.Robot
         public async Task<bool> IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode leftDCMotorMode, int leftDCMotorValue, 
                                                         RobotProtocol.DCMotorMode rightDCMotorMode, int rightDCMotorValue)
         {
-            string madeJsonCommand = RobotProtocol.MakeDCMotorCommand(leftDCMotorMode, leftDCMotorValue, rightDCMotorMode, rightDCMotorValue);
+            string madeJsonCommand = RobotProtocol.MakeDCMotorsCommand(leftDCMotorMode, leftDCMotorValue, rightDCMotorMode, rightDCMotorValue);
             bool bDidWell = false;
 
             if (madeJsonCommand == null)
