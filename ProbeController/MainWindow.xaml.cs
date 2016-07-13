@@ -206,13 +206,18 @@ namespace ProbeController
                     await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 200, RobotProtocol.DCMotorMode.FORWARD, 165);
                     break;
                 case Key.A:
-                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 0, RobotProtocol.DCMotorMode.FORWARD, 150);
+                    //await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 0, RobotProtocol.DCMotorMode.FORWARD, 150);
+                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.BACKWARD, 140, RobotProtocol.DCMotorMode.FORWARD, 80);
+
                     break;
                 case Key.S:
                     await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.BACKWARD, 160, RobotProtocol.DCMotorMode.BACKWARD, 165);
                     break;
                 case Key.D:
-                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 150, RobotProtocol.DCMotorMode.FORWARD, 0);
+                    for(int i = 0; i < 14; ++i)
+                    {
+                        await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 70, RobotProtocol.DCMotorMode.BACKWARD, 140);
+                    }
                     break;
             }
         }
@@ -223,7 +228,8 @@ namespace ProbeController
         }
         private async void onMoveRightButton(object sender, RoutedEventArgs e)
         {
-            await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 150, RobotProtocol.DCMotorMode.FORWARD, 0);
+            // 150, 0 
+            //await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 80, RobotProtocol.DCMotorMode.BACKWARD, 130);
         }
         private async void onMoveForwardButton(object sender, RoutedEventArgs e)
         {

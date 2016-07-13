@@ -36,14 +36,14 @@ namespace ProbeController.Robot
             return bSucceeded;
         }
     
-        //public async Task<bool> MoveRobot(Vector directionVector, double duration)
-        //{
-        //    directionVector.Normalize();
-
-        //}
 
         public async Task<bool> FaceRobotUsingVector(Vector directionVector)
         {
+            // dot product between FACEVECTOR(0,1) and directionVector to get theta value
+            // also the sign of theta indicates the direction to which this robot should go
+            // ex) theta > 0 --> left
+            // ex) theta < 0 --> right
+            // ex) theta = 0 --> still
             double theta = Vector.AngleBetween(FACEVECTOR, directionVector);
 
             // when theta is greater than 0, it means go to the left direction
@@ -51,6 +51,9 @@ namespace ProbeController.Robot
             {
                 
             }
+            // it means go to the right direction
+            // 14 times , (forward,70, backward,130) --> about 90 degrees
+            // 7 times , (forward 70 backward 130) --> about 45 degrees
             else if(theta < 0)
             {
 
@@ -60,15 +63,6 @@ namespace ProbeController.Robot
             {
                 
             }
-
-
-
-
-
-                        
-            
-
-
 
             return true;
         }
@@ -94,6 +88,11 @@ namespace ProbeController.Robot
             return retDirection;
         }
         
+        //public async Task<bool> MoveRobot(Vector directionVector, double duration)
+        //{
+        //    directionVector.Normalize();
+
+        //}
 
     }
 }
