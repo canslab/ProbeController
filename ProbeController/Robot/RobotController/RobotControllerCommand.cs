@@ -7,6 +7,7 @@ namespace ProbeController.Robot
     public partial class RobotController
     {
         public readonly Vector FACEVECTOR = new Vector(0, 1);
+        protected enum MoveDirection { LEFT, RIGHT, STILL, UNDEF };
 
         /// <summary>
         /// Turn on Robot's LED
@@ -34,18 +35,65 @@ namespace ProbeController.Robot
             // return whether this function works well or not
             return bSucceeded;
         }
-
+    
         //public async Task<bool> MoveRobot(Vector directionVector, double duration)
         //{
         //    directionVector.Normalize();
-                
+
         //}
 
         public async Task<bool> FaceRobotUsingVector(Vector directionVector)
         {
             double theta = Vector.AngleBetween(FACEVECTOR, directionVector);
+
+            // when theta is greater than 0, it means go to the left direction
+            if (theta > 0)
+            {
+                
+            }
+            else if(theta < 0)
+            {
+
+            }
+            // when theta is 0, stay still
+            else
+            {
+                
+            }
+
+
+
+
+
+                        
             
+
+
+
+            return true;
         }
+
+        protected MoveDirection getDirectionBasedOnVector(Vector targetVector)
+        {
+            MoveDirection retDirection = MoveDirection.UNDEF;
+
+            // when targetVector is toward up right to the origin
+            if (targetVector.X == 0 && targetVector.Y >= 0)
+            {
+                retDirection = MoveDirection.STILL;
+            }
+            else if (targetVector.X >= 0)
+            {
+                retDirection = MoveDirection.RIGHT;
+            }
+            else
+            {
+                retDirection = MoveDirection.LEFT;
+            }
+
+            return retDirection;
+        }
+        
 
     }
 }
