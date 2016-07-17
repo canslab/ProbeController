@@ -98,11 +98,18 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="GrabWindow.xaml.cs">
+      <DependentUpon>GrabWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MainWindowPartial.cs" />
     <Compile Include="Robot\RobotCommunicator.cs" />
     <Compile Include="Robot\RobotController\RobotController.cs" />
     <Compile Include="Robot\RobotController\RobotControllerCommand.cs" />
     <Compile Include="Robot\RobotProtocol.cs" />
+    <Page Include="GrabWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

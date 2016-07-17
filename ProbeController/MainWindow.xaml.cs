@@ -12,8 +12,6 @@ using System.Windows.Media.Imaging;
 using JHStreamReceiver;
 using ProbeController.Robot;
 using Cv2 = OpenCvSharp;
-using System.Threading.Tasks;
-using System.Text;
 
 namespace ProbeController
 {
@@ -29,6 +27,11 @@ namespace ProbeController
         // user defined frame snippet (subset of a frame)
         private Cv2.Point mFrameSnippetLocation;
         private Cv2.Size mFrameSnippetSize;
+
+        private bool mbGrapping;
+        private Cv2.Mat mGrappedFrameMat;
+
+        private static string STREAM_URL = "http://devjhlab.iptime.org:8080/?action=stream";
 
         /// <summary>
         /// Constructor
@@ -54,6 +57,7 @@ namespace ProbeController
             verticalServoTextBox.Text = "0";
             horizontalServoTextBox.Text = "0";
 
+            mbGrapping = false;
         }
         protected override void OnInitialized(EventArgs e)
         {
@@ -69,7 +73,7 @@ namespace ProbeController
             bool bSuccess = false;
 
             // initate connection to remote camera using ConnectToURLAsync()
-            bSuccess = await mStreamReceiver.ConnectToURLAsync("http://devjhlab.iptime.org:8080/?action=stream");
+            bSuccess = await mStreamReceiver.ConnectToURLAsync(STREAM_URL);
             if (bSuccess == false)
             {
                 MessageBox.Show("Connection Failure.");
@@ -83,6 +87,7 @@ namespace ProbeController
                 endStreamButton.IsEnabled = true;
             }
 
+            startStreamButton.Content = "Working..";
             // camera is now working....
             bIsCameraWorking = true;
             
@@ -105,6 +110,12 @@ namespace ProbeController
 
                 // after using that, you should release it, otherwise memory leak will be occured.
                 eachFrame.Release();
+            }
+
+            if (mbGrapping == true)
+            {
+                mGrappedFrameMat = await mStreamReceiver.GetFrameAsMatAsync();
+                Console.WriteLine("{0},{1}", mGrappedFrameMat.Width, mGrappedFrameMat.Height);
             }
 
             // after the while loop expired, streamReceiver should be disconnected.
@@ -283,29 +294,58 @@ namespace ProbeController
         private void onMouseUpAtFrame(object sender, MouseButtonEventArgs e)
         {
             var mouseUpPosition = e.GetPosition(sender as IInputElement);
-            mFrameSnippetSize.Width = (int)Math.Abs(mouseUpPosition.X - mFrameSnippetLocation.X);
-            mFrameSnippetSize.Height = (int)Math.Abs(mouseUpPosition.Y - mFrameSnippetLocation.Y);
 
-            if ((int)mouseUpPosition.X <= mFrameSnippetLocation.X)
+            // only when user is now grapping an image.. calculate the region.
+            if (mbGrapping == true)
             {
-                mFrameSnippetLocation.X = (int)mouseUpPosition.X;
-            }
-            
-            if ((int)mouseUpPosition.Y <= mFrameSnippetLocation.Y)
-            {
-                mFrameSnippetLocation.Y = (int)mouseUpPosition.Y;
-            }
+                mFrameSnippetSize.Width = (int)Math.Abs(mouseUpPosition.X - mFrameSnippetLocation.X);
+                mFrameSnippetSize.Height = (int)Math.Abs(mouseUpPosition.Y - mFrameSnippetLocation.Y);
 
-            snippetOriginLabel.Content = string.Format("({0}, {1})", mFrameSnippetLocation.X, mFrameSnippetLocation.Y);
-            snippetSizeLabel.Content = string.Format("({0}, {1})", mFrameSnippetSize.Width, mFrameSnippetSize.Height);
+                if ((int)mouseUpPosition.X <= mFrameSnippetLocation.X)
+                {
+                    mFrameSnippetLocation.X = (int)mouseUpPosition.X;
+                }
+
+                if ((int)mouseUpPosition.Y <= mFrameSnippetLocation.Y)
+                {
+                    mFrameSnippetLocation.Y = (int)mouseUpPosition.Y;
+                }
+
+                snippetOriginLabel.Content = string.Format("({0}, {1})", mFrameSnippetLocation.X, mFrameSnippetLocation.Y);
+                snippetSizeLabel.Content = string.Format("({0}, {1})", mFrameSnippetSize.Width, mFrameSnippetSize.Height);
+
+                // make subset of last 
+                mGrappedFrameMat = mGrappedFrameMat.SubMat(new Cv2.Rect(mFrameSnippetLocation, mFrameSnippetSize));
+                mbGrapping = false;
+                onStartStreamButton(sender, e);
+            }
         }
         private void onMouseDownAtFrame(object sender, MouseButtonEventArgs e)
         {
             var mouseDownPosition = e.GetPosition(sender as IInputElement);
-            mFrameSnippetLocation.X = (int)mouseDownPosition.X;
-            mFrameSnippetLocation.Y = (int)mouseDownPosition.Y;
-        }
 
+            // only when user starts to pick an part of the frame.
+            if (bIsCameraWorking == true)
+            {
+                // release the old grapped frame only when mGrappedFrameMat is not null.
+                mGrappedFrameMat?.Release();
+
+                // get start location.
+                mFrameSnippetLocation.X = (int)mouseDownPosition.X;
+                mFrameSnippetLocation.Y = (int)mouseDownPosition.Y;
+                
+                // set grapping flag to true
+                mbGrapping = true;
+
+                // pause streaming
+                bIsCameraWorking = false;
+                // modify the content of start stream button
+                startStreamButton.Content = "Grabbing..";
+            }
+        }
+        private void onMouseMoveAtFrame(object sender, MouseEventArgs e)
+        {
+        }
         
         private async void onHorizontalServoSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
@@ -320,7 +360,6 @@ namespace ProbeController
                 await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Horizontal, newTheta);
             }
         }
-
         private async void onVerticalServoSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             const int MAX_VERTICAL_SERVO_DOWN_THETA = 10;
@@ -331,6 +370,37 @@ namespace ProbeController
             if (mRobotController != null && mRobotController.IsCommunicatorConnected == true)
             {
                 await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Vertical, newTheta);
+            }
+        }
+        private void onGrabButton(object sender, RoutedEventArgs e)
+        {
+            // Modal Window
+            GrabWindow grabWindow = null;
+
+            // if there exists an grapped mat
+            if (mGrappedFrameMat != null)
+            {
+                // initialize GrabWindow by using grapped matrix(it should be cloned)
+                grabWindow = new GrabWindow(mGrappedFrameMat.Clone());
+
+                // release the grabpped mat since there is no need to use
+                mGrappedFrameMat.Release();
+
+                // make it as a null
+                mGrappedFrameMat = null;
+
+                // show dialog
+                bool ? bCloseWell = grabWindow.ShowDialog();
+
+                // check if there is an error
+                if (bCloseWell.HasValue && bCloseWell == true)
+                {
+                    Console.WriteLine("Okay!");
+                }
+            }
+            else
+            {
+                MessageBox.Show("You should select the region!!!");
             }
         }
     }

@@ -114,7 +114,7 @@
                 <Label x:Name="snippetOriginLabel" Grid.Column="1" VerticalAlignment="Center">(40, 30)</Label>
                 <Label Grid.Column="2" VerticalAlignment="Center">Width, Height:</Label>
                 <Label x:Name="snippetSizeLabel" Grid.Column="3" VerticalAlignment="Center">(300,200)</Label>
-                <Button x:Name="grabSnippetButton" Grid.Column="4">Grab</Button>
+                <Button x:Name="grabSnippetButton" Grid.Column="4" Click="onGrabButton">Grab</Button>
             </Grid>
         </GroupBox>
 
