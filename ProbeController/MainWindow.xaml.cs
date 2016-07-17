@@ -13,6 +13,7 @@ using JHStreamReceiver;
 using ProbeController.Robot;
 using Cv2 = OpenCvSharp;
 using System.Threading.Tasks;
+using System.Text;
 
 namespace ProbeController
 {
@@ -49,6 +50,10 @@ namespace ProbeController
             //mFrameSnippetBottomRightLocaiton = new Cv2.Point(0.0f, 0.0f);
             mFrameSnippetLocation = new Cv2.Point(0.0f, 0.0f);
             mFrameSnippetSize = new Cv2.Size(0.0f, 0.0f);
+
+            verticalServoTextBox.Text = "0";
+            horizontalServoTextBox.Text = "0";
+
         }
         protected override void OnInitialized(EventArgs e)
         {
@@ -255,7 +260,7 @@ namespace ProbeController
             double verticalServoTheta;
 
             // fetch the value of 2 text boxes (horizontal servo theta value, vertical servo theta value)
-            if (double.TryParse(hServoTextBox.Text, out horizontalServoTheta) == true && double.TryParse(vServoTextBox.Text, out verticalServoTheta))
+            if (double.TryParse(horizontalServoTextBox.Text, out horizontalServoTheta) == true && double.TryParse(verticalServoTextBox.Text, out verticalServoTheta))
             {
                 bDidWell &= await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Horizontal, horizontalServoTheta);
                 bDidWell &= await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Vertical, verticalServoTheta);
@@ -263,6 +268,10 @@ namespace ProbeController
                 if (bDidWell == false)
                 {
                     MessageBox.Show("Rotate of horizontal servo motor has failed.. ");
+                }
+                else // if succeeded
+                {
+                       
                 }
             }
             else
@@ -287,14 +296,42 @@ namespace ProbeController
                 mFrameSnippetLocation.Y = (int)mouseUpPosition.Y;
             }
 
-            Console.WriteLine("x={0},y={1} Width = {2},{3}", mFrameSnippetLocation.X, mFrameSnippetLocation.Y,
-                mFrameSnippetSize.Width, mFrameSnippetSize.Height);
+            snippetOriginLabel.Content = string.Format("({0}, {1})", mFrameSnippetLocation.X, mFrameSnippetLocation.Y);
+            snippetSizeLabel.Content = string.Format("({0}, {1})", mFrameSnippetSize.Width, mFrameSnippetSize.Height);
         }
         private void onMouseDownAtFrame(object sender, MouseButtonEventArgs e)
         {
             var mouseDownPosition = e.GetPosition(sender as IInputElement);
             mFrameSnippetLocation.X = (int)mouseDownPosition.X;
             mFrameSnippetLocation.Y = (int)mouseDownPosition.Y;
+        }
+
+        
+        private async void onHorizontalServoSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            const int MAX_HORIZONTAL_SERVO_THETA = 60;
+
+            double newTheta = 12 * e.NewValue - MAX_HORIZONTAL_SERVO_THETA;
+            //e.NewValue
+            horizontalServoTextBox.Text = Convert.ToString(newTheta);
+
+            if (mRobotController != null && mRobotController.IsCommunicatorConnected == true)
+            {
+                await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Horizontal, newTheta);
+            }
+        }
+
+        private async void onVerticalServoSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            const int MAX_VERTICAL_SERVO_DOWN_THETA = 10;
+
+            double newTheta = -10 * e.NewValue + MAX_VERTICAL_SERVO_DOWN_THETA;
+
+            verticalServoTextBox.Text = Convert.ToString(newTheta);
+            if (mRobotController != null && mRobotController.IsCommunicatorConnected == true)
+            {
+                await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Vertical, newTheta);
+            }
         }
     }
 }

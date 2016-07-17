@@ -19,7 +19,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- Frame Panel: Image(frame), StartStream, EndStream, Blur, Canny Buttons....-->
-        <StackPanel Margin="15,10,15,11.4" Orientation="Horizontal" Grid.Column="0">
+        <StackPanel Margin="42,10,385.6,11.6" Orientation="Horizontal" Grid.Column="0" Grid.ColumnSpan="2">
             <Image x:Name="frame" HorizontalAlignment="Left" Height="480" VerticalAlignment="Top" Width="640" MouseUp="onMouseUpAtFrame" MouseDown="onMouseDownAtFrame"/>
             <StackPanel x:Name="buttonFrame" HorizontalAlignment="Left" Height="Auto" VerticalAlignment="Top" MinWidth="100" Orientation="Vertical" Margin="10,0,0,0">
                 <Button x:Name="startStreamButton" Content="Start Stream" Click="onStartStreamButton" Margin="4" MinHeight="40" />
@@ -72,26 +72,51 @@
                 </Grid>
 
                 <!-- Horizontal Servo Motor Theta and confirm button -->
-                <Grid Margin="10,10,10,10" Height="60">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="1*"/>
-                        <RowDefinition Height="1*"/>
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1*"/>
-                    </Grid.ColumnDefinitions>
-                    <Label Grid.Column="0" Grid.Row="0" Content="HServo Theta:" Grid.ColumnSpan="2" Margin="0,0,98.333,0" Grid.RowSpan="2"/>
-                    <Label Grid.Column="0" Grid.Row="1" Content="VServo Theta:" Grid.ColumnSpan="2" Margin="0,0,98.333,0" Grid.RowSpan="2"/>
-                    <TextBox Name="hServoTextBox" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Center" Width="80" Margin="9,0,9,2"  />
-                    <TextBox Name="vServoTextBox" Grid.Column="1" Grid.Row="1" HorizontalAlignment="Center" Width="80" Margin="0,2,0,0"  />
-                    <Button Name="servoConfirmButton" Grid.Column="1" Content="Confirm" Grid.ColumnSpan="2" Margin="98.333,0,0,0" Grid.RowSpan="2" Click="onServoButton"/>
-                </Grid>
+                <GroupBox x:Name="ServoGroupBox" Header="Servo Motor" Height="Auto" >
+                    <Grid Margin="5
+                          ,5,5,5" Height="110">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="30*"/>
+                            <RowDefinition Height="30*"/>
+                            <RowDefinition Height="40*"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="60*"/>
+                            <ColumnDefinition Width="70*"/>
+                            <ColumnDefinition Width="80*"/>
+                            <ColumnDefinition Width="47*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" Grid.Row="0" Content="HServo θ:" Margin="0,0,2.8,0.6" Grid.RowSpan="2"/>
+                        <Label Grid.Column="0" Grid.Row="1" Content="VServo θ:" Margin="0,0.2,2.8,1.6" Grid.RowSpan="2"/>
+                        <TextBox Name="horizontalServoTextBox" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Center" Width="60" Margin="8.2,0,3.8,1.8" />
+                        <TextBox Name="verticalServoTextBox" Grid.Column="1" Grid.Row="1" HorizontalAlignment="Center" Width="60" Margin="8.2,2.2,3.8,0.6"  />
+                        <Button Name="servoConfirmButton" Grid.Column="2" Content="Confirm" Margin="2.2,0,3.2,0.6" Grid.RowSpan="2" Click="onServoButton"/>
+                        <Slider Name="horinzontalServoSlider" Value="5" Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3" VerticalAlignment="Bottom"  Margin="0,0,0,10" ValueChanged="onHorizontalServoSliderValueChanged"/>
+                        <Slider Name="verticalServoSlider" Grid.Column="3" Grid.Row="0" Grid.RowSpan="3" Orientation="Vertical" HorizontalAlignment="Center" Value="3" Margin="0,0,0,9.6" ValueChanged="onVerticalServoSliderValueChanged" />
+                    </Grid>
+                </GroupBox>
 
             </StackPanel>
         </GroupBox>
-        <GroupBox x:Name="BottomGroupBox" Header="GroupBox" HorizontalAlignment="Left" Height="35" Margin="10,3.4,0,0" VerticalAlignment="Top" Width="102" Grid.Row="1"/>
+
+        <!-- Bottom Panel Group Box-->
+        <GroupBox x:Name="BottomGroupBox" Header="Image Snippet Dashboard" HorizontalAlignment="Left" Width="480" Height="Auto" Margin="40,0,0,10"  Grid.Row="1" RenderTransformOrigin="0.5,0.5">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="20*"/>
+                    <ColumnDefinition Width="25*"/>
+                    <ColumnDefinition Width="30*"/>
+                    <ColumnDefinition Width="30*"/>
+                    <ColumnDefinition Width="30*"/>
+                </Grid.ColumnDefinitions>
+
+                <Label Grid.Column="0" VerticalAlignment="Center" Width="Auto">Origin:</Label>
+                <Label x:Name="snippetOriginLabel" Grid.Column="1" VerticalAlignment="Center">(40, 30)</Label>
+                <Label Grid.Column="2" VerticalAlignment="Center">Width, Height:</Label>
+                <Label x:Name="snippetSizeLabel" Grid.Column="3" VerticalAlignment="Center">(300,200)</Label>
+                <Button x:Name="grabSnippetButton" Grid.Column="4">Grab</Button>
+            </Grid>
+        </GroupBox>
 
 
 

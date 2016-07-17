@@ -96,7 +96,6 @@ namespace ProbeController.Robot
 
             return true;
         }
-
         protected MoveDirection getDirectionBasedOnVector(Vector targetVector)
         {
             MoveDirection retDirection = MoveDirection.UNDEF;
