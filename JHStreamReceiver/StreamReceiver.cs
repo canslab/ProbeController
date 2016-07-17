@@ -66,7 +66,8 @@ namespace JHStreamReceiver
             catch(WebException e)
             {
                 // WebException has occured because it can't connect to Ip camera.
-                webResponse = null;              
+                webResponse = null;
+                webRequest = null;        
                 
                 // just return false
                 return false;

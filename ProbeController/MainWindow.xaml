@@ -9,14 +9,18 @@
         KeyDown="onMainKeyDown"
         Height="600" Width="1200" MinHeight="600" MinWidth="1200" MaxHeight="600" MaxWidth="1200">
     <Grid Margin="0,1,0,-1.333">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="167*"/>
+            <RowDefinition Height="23*"/>
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*"/>
             <ColumnDefinition Width="1*"/>
         </Grid.ColumnDefinitions>
 
         <!-- Frame Panel: Image(frame), StartStream, EndStream, Blur, Canny Buttons....-->
-        <StackPanel Margin="15,10,15,80.4" Orientation="Horizontal" Grid.Column="0">
-            <Image x:Name="frame" HorizontalAlignment="Left" Height="480" VerticalAlignment="Top" Width="640"/>
+        <StackPanel Margin="15,10,15,11.4" Orientation="Horizontal" Grid.Column="0">
+            <Image x:Name="frame" HorizontalAlignment="Left" Height="480" VerticalAlignment="Top" Width="640" MouseUp="onMouseUpAtFrame" MouseDown="onMouseDownAtFrame"/>
             <StackPanel x:Name="buttonFrame" HorizontalAlignment="Left" Height="Auto" VerticalAlignment="Top" MinWidth="100" Orientation="Vertical" Margin="10,0,0,0">
                 <Button x:Name="startStreamButton" Content="Start Stream" Click="onStartStreamButton" Margin="4" MinHeight="40" />
                 <Button x:Name="endStreamButton" Content="End Stream" Click="onEndStreamButton" Margin="4" MinHeight="40"/>
@@ -26,7 +30,7 @@
         </StackPanel>
 
         <!-- Control Panel Group Box -->
-        <GroupBox x:Name="RightGroupBox" Header="Robot Control Panel" Height="414" Width="Auto" Margin="11.667,10,48,0" VerticalAlignment="Top" Grid.Column="1">
+        <GroupBox x:Name="RightGroupBox" Header="Robot Dashboard" Height="414" Width="Auto" Margin="12,10,47.6,0" VerticalAlignment="Top" Grid.Column="1">
             <!-- Groupbox Contents... In this groupbox, contents are organized using StackPanel-->
             <StackPanel Width="Auto" Height="Auto" Orientation="Vertical" Margin="5,20,5,0" VerticalAlignment="Top" >
                 <!-- IP Address, Port, 2 TextBox, Connect, Disconnect -->
@@ -87,5 +91,9 @@
 
             </StackPanel>
         </GroupBox>
+        <GroupBox x:Name="BottomGroupBox" Header="GroupBox" HorizontalAlignment="Left" Height="35" Margin="10,3.4,0,0" VerticalAlignment="Top" Width="102" Grid.Row="1"/>
+
+
+
     </Grid>
 </Window>

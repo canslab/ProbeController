@@ -24,7 +24,10 @@ namespace ProbeController
         // communicator to robot
         private RobotCommunicator mCommunicator;
         private RobotController mRobotController;
-        
+
+        // user defined frame snippet (subset of a frame)
+        private Cv2.Point mFrameSnippetLocation;
+        private Cv2.Size mFrameSnippetSize;
 
         /// <summary>
         /// Constructor
@@ -42,6 +45,10 @@ namespace ProbeController
             disconnectButton.IsEnabled = false;
             mCommunicator = new RobotCommunicator();
             mRobotController = new RobotController();
+
+            //mFrameSnippetBottomRightLocaiton = new Cv2.Point(0.0f, 0.0f);
+            mFrameSnippetLocation = new Cv2.Point(0.0f, 0.0f);
+            mFrameSnippetSize = new Cv2.Size(0.0f, 0.0f);
         }
         protected override void OnInitialized(EventArgs e)
         {
@@ -206,18 +213,18 @@ namespace ProbeController
                     await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 200, RobotProtocol.DCMotorMode.Forward, 165);
                     break;
                 case Key.A:
-                    //await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 0, RobotProtocol.DCMotorMode.FORWARD, 150);
-                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 140, RobotProtocol.DCMotorMode.Forward, 80);
-
+                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 0, RobotProtocol.DCMotorMode.Forward, 150);
+                    //await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 140, RobotProtocol.DCMotorMode.Forward, 80);
                     break;
                 case Key.S:
                     await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 160, RobotProtocol.DCMotorMode.Backward, 165);
                     break;
                 case Key.D:
-                    for(int i = 0; i < 14; ++i)
-                    {
-                        await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 70, RobotProtocol.DCMotorMode.Backward, 140);
-                    }
+                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 150, RobotProtocol.DCMotorMode.Forward, 0);
+                    //for(int i = 0; i < 14; ++i)
+                    //{
+                    //    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 70, RobotProtocol.DCMotorMode.Backward, 140);
+                    //}
                     break;
             }
         }
@@ -247,7 +254,8 @@ namespace ProbeController
             double horizontalServoTheta;
             double verticalServoTheta;
 
-            if (Double.TryParse(hServoTextBox.Text, out horizontalServoTheta) == true && Double.TryParse(vServoTextBox.Text, out verticalServoTheta))
+            // fetch the value of 2 text boxes (horizontal servo theta value, vertical servo theta value)
+            if (double.TryParse(hServoTextBox.Text, out horizontalServoTheta) == true && double.TryParse(vServoTextBox.Text, out verticalServoTheta))
             {
                 bDidWell &= await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Horizontal, horizontalServoTheta);
                 bDidWell &= await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Vertical, verticalServoTheta);
@@ -261,6 +269,32 @@ namespace ProbeController
             {
                 MessageBox.Show("Either horizontal theta or vertical theta is invalid...");
             }
+        }
+
+        private void onMouseUpAtFrame(object sender, MouseButtonEventArgs e)
+        {
+            var mouseUpPosition = e.GetPosition(sender as IInputElement);
+            mFrameSnippetSize.Width = (int)Math.Abs(mouseUpPosition.X - mFrameSnippetLocation.X);
+            mFrameSnippetSize.Height = (int)Math.Abs(mouseUpPosition.Y - mFrameSnippetLocation.Y);
+
+            if ((int)mouseUpPosition.X <= mFrameSnippetLocation.X)
+            {
+                mFrameSnippetLocation.X = (int)mouseUpPosition.X;
+            }
+            
+            if ((int)mouseUpPosition.Y <= mFrameSnippetLocation.Y)
+            {
+                mFrameSnippetLocation.Y = (int)mouseUpPosition.Y;
+            }
+
+            Console.WriteLine("x={0},y={1} Width = {2},{3}", mFrameSnippetLocation.X, mFrameSnippetLocation.Y,
+                mFrameSnippetSize.Width, mFrameSnippetSize.Height);
+        }
+        private void onMouseDownAtFrame(object sender, MouseButtonEventArgs e)
+        {
+            var mouseDownPosition = e.GetPosition(sender as IInputElement);
+            mFrameSnippetLocation.X = (int)mouseDownPosition.X;
+            mFrameSnippetLocation.Y = (int)mouseDownPosition.Y;
         }
     }
 }
