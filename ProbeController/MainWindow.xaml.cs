@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using JHStreamReceiver;
 using ProbeController.Robot;
 using Cv2 = OpenCvSharp;
+using System.Windows.Controls;
 
 namespace ProbeController
 {
@@ -218,12 +219,12 @@ namespace ProbeController
             switch(e.Key)
             {
                 case Key.F3:
-                    await mCommunicator.IssueLEDCommandAsync(RobotProtocol.LEDSide.Left, bLeftLEDButtonClicked);
-                    bLeftLEDButtonClicked = !bLeftLEDButtonClicked;
+                    //await mCommunicator.IssueLEDCommandAsync(RobotProtocol.LEDSide.Left, bLeftLEDButtonClicked);
+                    //bLeftLEDButtonClicked = !bLeftLEDButtonClicked;
                     break;
                 case Key.F4:
-                    await mCommunicator.IssueLEDCommandAsync(RobotProtocol.LEDSide.Right, bRightLEDButtonClicked);
-                    bRightLEDButtonClicked = !bRightLEDButtonClicked;
+                    //await mCommunicator.IssueLEDCommandAsync(RobotProtocol.LEDSide.Right, bRightLEDButtonClicked);
+                    //bRightLEDButtonClicked = !bRightLEDButtonClicked;
                     break;
                 case Key.W:
                     await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 200, RobotProtocol.DCMotorMode.Forward, 165);
@@ -244,25 +245,6 @@ namespace ProbeController
                     break;
             }
         }
-
-        private async void onMoveLeftButton(object sender, RoutedEventArgs e)
-        {
-            await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 0, RobotProtocol.DCMotorMode.Forward, 150);
-        }
-        private async void onMoveRightButton(object sender, RoutedEventArgs e)
-        {
-            // 150, 0 
-            //await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 80, RobotProtocol.DCMotorMode.BACKWARD, 130);
-        }
-        private async void onMoveForwardButton(object sender, RoutedEventArgs e)
-        {
-            await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 200, RobotProtocol.DCMotorMode.Forward, 165);
-        }
-        private async void onMoveBackwardButton(object sender, RoutedEventArgs e)
-        {
-            await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 160, RobotProtocol.DCMotorMode.Backward, 165);
-        }
-
         private async void onServoButton(object sender, RoutedEventArgs e)
         {
             bool bDidWell = true;
@@ -298,9 +280,11 @@ namespace ProbeController
             // only when user is now grapping an image.. calculate the region.
             if (mbGrapping == true)
             {
+                // calculate the Width and Height of snippet frame.
                 mFrameSnippetSize.Width = (int)Math.Abs(mouseUpPosition.X - mFrameSnippetLocation.X);
                 mFrameSnippetSize.Height = (int)Math.Abs(mouseUpPosition.Y - mFrameSnippetLocation.Y);
 
+                // calculate the effective origin(top left corner point). 
                 if ((int)mouseUpPosition.X <= mFrameSnippetLocation.X)
                 {
                     mFrameSnippetLocation.X = (int)mouseUpPosition.X;
@@ -311,13 +295,27 @@ namespace ProbeController
                     mFrameSnippetLocation.Y = (int)mouseUpPosition.Y;
                 }
 
+                // update bottom dashboard
                 snippetOriginLabel.Content = string.Format("({0}, {1})", mFrameSnippetLocation.X, mFrameSnippetLocation.Y);
                 snippetSizeLabel.Content = string.Format("({0}, {1})", mFrameSnippetSize.Width, mFrameSnippetSize.Height);
 
                 // make subset of last 
-                mGrappedFrameMat = mGrappedFrameMat.SubMat(new Cv2.Rect(mFrameSnippetLocation, mFrameSnippetSize));
+                if (mGrappedFrameMat != null)
+                {
+                    // ROI
+                    if (mFrameSnippetSize.Height == 0 || mFrameSnippetSize.Width == 0)
+                    {
+                        mFrameSnippetSize.Height = mFrameSnippetSize.Width = 1;
+                    }
+
+                    mGrappedFrameMat = mGrappedFrameMat?.SubMat(new Cv2.Rect(mFrameSnippetLocation, mFrameSnippetSize));
+                }
+
+                // Grapping is done
                 mbGrapping = false;
-                onStartStreamButton(sender, e);
+
+                // restart streaming 
+                onStartStreamButton(startStreamButton, e);
             }
         }
         private void onMouseDownAtFrame(object sender, MouseButtonEventArgs e)
@@ -382,6 +380,7 @@ namespace ProbeController
             {
                 // initialize GrabWindow by using grapped matrix(it should be cloned)
                 grabWindow = new GrabWindow(mGrappedFrameMat.Clone());
+                grabWindow.Owner = this;
 
                 // release the grabpped mat since there is no need to use
                 mGrappedFrameMat.Release();
@@ -390,7 +389,7 @@ namespace ProbeController
                 mGrappedFrameMat = null;
 
                 // show dialog
-                bool ? bCloseWell = grabWindow.ShowDialog();
+                bool? bCloseWell = grabWindow.ShowDialog();
 
                 // check if there is an error
                 if (bCloseWell.HasValue && bCloseWell == true)
@@ -402,6 +401,28 @@ namespace ProbeController
             {
                 MessageBox.Show("You should select the region!!!");
             }
+        }
+
+        private async void onRightGroupCommonButtonHandler(object sender, RoutedEventArgs e)
+        {
+            var eventSource = e.Source as Button;
+            
+            switch(eventSource.Name)
+            {
+                case "MoveLeftButton":
+                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 0, RobotProtocol.DCMotorMode.Forward, 150);
+                    break;
+                case "MoveRightButton":
+                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 80, RobotProtocol.DCMotorMode.BACKWARD, 130);
+                    break;
+                case "MoveForwardButton":
+                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 200, RobotProtocol.DCMotorMode.Forward, 165);
+                    break;
+                case "MoveBackwardButton":
+                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 160, RobotProtocol.DCMotorMode.Backward, 165);
+                    break;
+            }
+
         }
     }
 }

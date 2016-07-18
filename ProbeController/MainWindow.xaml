@@ -30,7 +30,8 @@
         </StackPanel>
 
         <!-- Control Panel Group Box -->
-        <GroupBox x:Name="RightGroupBox" Header="Robot Dashboard" Height="414" Width="Auto" Margin="12,10,47.6,0" VerticalAlignment="Top" Grid.Column="1">
+        <GroupBox x:Name="RightGroupBox" Header="Robot Dashboard" Height="414" Width="Auto" Margin="12,10,47.6,0" VerticalAlignment="Top" Grid.Column="1"
+                  Button.Click="onRightGroupCommonButtonHandler">
             <!-- Groupbox Contents... In this groupbox, contents are organized using StackPanel-->
             <StackPanel Width="Auto" Height="Auto" Orientation="Vertical" Margin="5,20,5,0" VerticalAlignment="Top" >
                 <!-- IP Address, Port, 2 TextBox, Connect, Disconnect -->
@@ -65,10 +66,10 @@
                         <ColumnDefinition Width="1*"/>
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
-                    <Button x:Name="MoveLeftButton" Grid.Column="0" Content="Move Left" Click="onMoveLeftButton"  MinHeight="40"/>
-                    <Button x:Name="MoveRightButton" Grid.Column="1" Content="Move Right" Click="onMoveRightButton" MinHeight="40"/>
-                    <Button x:Name="MoveForwardButton" Grid.Column="2" Content="Move Forwrd" Click="onMoveForwardButton"  MinHeight="40"/>
-                    <Button x:Name="MoveBackwardButton" Grid.Column="3" Content="Move Backward" Click="onMoveBackwardButton" MinHeight="40"/>
+                    <Button x:Name="MoveLeftButton" Grid.Column="0" Content="Move Left" MinHeight="40" HorizontalAlignment="Left" Width="74"/>
+                    <Button x:Name="MoveRightButton" Grid.Column="1" Content="Move Right" MinHeight="40"/>
+                    <Button x:Name="MoveForwardButton" Grid.Column="2" Content="Move Forwrd" MinHeight="40"/>
+                    <Button x:Name="MoveBackwardButton" Grid.Column="3" Content="Move Backward" MinHeight="40"/>
                 </Grid>
 
                 <!-- Horizontal Servo Motor Theta and confirm button -->

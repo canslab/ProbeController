@@ -46,5 +46,25 @@ namespace ProbeController
             base.OnClosed(e);
             //SnippetMat.Release();
         }
+
+        /// <summary>
+        /// When save button has been pushed.  
+        /// </summary>
+        /// <param name="sender"> event source </param>
+        /// <param name="e"> event parameters </param>
+        private void onSaveButton(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            dlg.FileName = "snippet.jpg";
+            dlg.DefaultExt = ".jpg";
+            dlg.Filter = "JPEG image (.jpg)|*.jpg";
+
+            bool? result = dlg.ShowDialog(this);
+            
+            if(result == true)
+            {
+                Cv2.Cv2.ImWrite(dlg.FileName, SnippetMat);
+            }
+        }
     }
 }

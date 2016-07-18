@@ -127,8 +127,8 @@ namespace JHStreamReceiver
             mImageBuffer.ClearContents();
 
             // dispose BinaryReader 
-            mReader.Dispose();
-            mReader.Close();
+            mReader?.Dispose();
+            mReader?.Close();
             // make mReader null
             mReader = null;
         }
