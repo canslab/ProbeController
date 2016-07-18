@@ -16,7 +16,7 @@ namespace ProbeController.Robot
         /// <summary>
         /// Whether this controller has valid(communicatable) communicator or not
         /// </summary>
-        public bool IsCommunicatorConnected
+        public bool CanCommunicate
         {
             get
             {
@@ -31,11 +31,6 @@ namespace ProbeController.Robot
                 }
             }
         }
-
-        /// <summary>
-        /// Whether this 
-        /// </summary>
-        public bool IsAttached { get; private set; }
 
         /// <summary>
         /// Communicator which is used to communicate with the remote robot.
@@ -57,10 +52,11 @@ namespace ProbeController.Robot
             bool? bArgCommunicatorConnected = communicator?.Connected;
 
             // First Condition : There doesn't exist communicator which has already been attched and connected.
-            // Second Condition: bSucceeded has a valid value(true or false)
+            // Second Condition: bArgCommunicatorConnected has a valid value(true or false)
             // Third Condition : and its value is true
             // It means communicator is not only valid but also it is connected
-            if (IsCommunicatorConnected == false && bArgCommunicatorConnected.HasValue && bArgCommunicatorConnected.Value == true)
+            // This is the perfect candidate for this class' communicator
+            if (CanCommunicate == false && bArgCommunicatorConnected.HasValue && bArgCommunicatorConnected.Value == true)
             {
                 Communicator = communicator;
                 bSucceeded = true;
@@ -91,12 +87,11 @@ namespace ProbeController.Robot
         /// </summary>
         public void DetachCommunicatorAndCloseIt()
         {
+            // first disconnect !
             Communicator?.Disconnect();
 
+            //second make Communicator Property null
             Communicator = null;
         }
-
-        
-
     }
 }

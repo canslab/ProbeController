@@ -73,6 +73,7 @@ namespace ProbeController
         {
             bool bSuccess = false;
 
+            e.Handled = true;
             // initate connection to remote camera using ConnectToURLAsync()
             bSuccess = await mStreamReceiver.ConnectToURLAsync(STREAM_URL);
             if (bSuccess == false)
@@ -124,6 +125,7 @@ namespace ProbeController
         }
         private void onEndStreamButton(object sender, RoutedEventArgs e)
         {
+            e.Handled = true;
             // camera should turn off
             bIsCameraWorking = false;
 
@@ -133,11 +135,11 @@ namespace ProbeController
         }
         private void onGaussianBlurButton(object sender, RoutedEventArgs e)
         {
-
+            e.Handled = true;
         }
         private void onCannyButton(object sender, RoutedEventArgs e)
         {
-
+            e.Handled = true;
         }
 
         private async void onConnectButton(object sender, RoutedEventArgs e)
@@ -145,6 +147,7 @@ namespace ProbeController
             int portNumber;
             string ipAddress;
 
+            e.Handled = true;
             ipAddress = ipTextBox.Text;
             try
             {
@@ -177,36 +180,11 @@ namespace ProbeController
         private void onDisconnectButton(object sender, RoutedEventArgs e)
         {
             mCommunicator.Disconnect();
+            e.Handled = true;
 
             connectButton.IsEnabled = true;
             disconnectButton.IsEnabled = false;
             
-        }
-        private async void onLeftLEDButton(object sender, RoutedEventArgs e)
-        {
-            bool bDidWell = false;
-            bDidWell = await mRobotController.TurnOnLED(RobotProtocol.LEDSide.Left, bLeftLEDButtonClicked);
-
-            if (bDidWell == false)
-            {
-                MessageBox.Show("LED Turn Failed..");                
-            }
-            else
-            {
-                bLeftLEDButtonClicked = !bLeftLEDButtonClicked;
-            }
-        }
-        private async void onRightLEDButton(object sender, RoutedEventArgs e)
-        {
-            bool bDidWell = await mRobotController.TurnOnLED(RobotProtocol.LEDSide.Right, bRightLEDButtonClicked);
-            if (bDidWell == false)
-            {
-                MessageBox.Show("LED Turn Failed..");
-            }
-            else
-            {
-                bRightLEDButtonClicked = !bRightLEDButtonClicked;
-            }
         }
 
         /// <summary>
@@ -245,38 +223,17 @@ namespace ProbeController
                     break;
             }
         }
-        private async void onServoButton(object sender, RoutedEventArgs e)
-        {
-            bool bDidWell = true;
-
-            double horizontalServoTheta;
-            double verticalServoTheta;
-
-            // fetch the value of 2 text boxes (horizontal servo theta value, vertical servo theta value)
-            if (double.TryParse(horizontalServoTextBox.Text, out horizontalServoTheta) == true && double.TryParse(verticalServoTextBox.Text, out verticalServoTheta))
-            {
-                bDidWell &= await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Horizontal, horizontalServoTheta);
-                bDidWell &= await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Vertical, verticalServoTheta);
-                
-                if (bDidWell == false)
-                {
-                    MessageBox.Show("Rotate of horizontal servo motor has failed.. ");
-                }
-                else // if succeeded
-                {
-                       
-                }
-            }
-            else
-            {
-                MessageBox.Show("Either horizontal theta or vertical theta is invalid...");
-            }
-        }
-
+        
+        /**********************************************************************/
+        /*                                                                    */
+        /*       Grabbing Snippet Image Event Handlers (Drag Feature)         */
+        /*                                                                    */
+        /**********************************************************************/
         private void onMouseUpAtFrame(object sender, MouseButtonEventArgs e)
         {
             var mouseUpPosition = e.GetPosition(sender as IInputElement);
-
+            e.Handled = true;
+            
             // only when user is now grapping an image.. calculate the region.
             if (mbGrapping == true)
             {
@@ -321,6 +278,7 @@ namespace ProbeController
         private void onMouseDownAtFrame(object sender, MouseButtonEventArgs e)
         {
             var mouseDownPosition = e.GetPosition(sender as IInputElement);
+            e.Handled = true;
 
             // only when user starts to pick an part of the frame.
             if (bIsCameraWorking == true)
@@ -341,39 +299,16 @@ namespace ProbeController
                 startStreamButton.Content = "Grabbing..";
             }
         }
-        private void onMouseMoveAtFrame(object sender, MouseEventArgs e)
-        {
-        }
-        
-        private async void onHorizontalServoSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            const int MAX_HORIZONTAL_SERVO_THETA = 60;
-
-            double newTheta = 12 * e.NewValue - MAX_HORIZONTAL_SERVO_THETA;
-            //e.NewValue
-            horizontalServoTextBox.Text = Convert.ToString(newTheta);
-
-            if (mRobotController != null && mRobotController.IsCommunicatorConnected == true)
-            {
-                await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Horizontal, newTheta);
-            }
-        }
-        private async void onVerticalServoSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            const int MAX_VERTICAL_SERVO_DOWN_THETA = 10;
-
-            double newTheta = -10 * e.NewValue + MAX_VERTICAL_SERVO_DOWN_THETA;
-
-            verticalServoTextBox.Text = Convert.ToString(newTheta);
-            if (mRobotController != null && mRobotController.IsCommunicatorConnected == true)
-            {
-                await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Vertical, newTheta);
-            }
-        }
+        /// <summary>
+        /// Grab Button Event Handler
+        /// </summary>
+        /// <param name="sender"> A reference to Grab Button Control </param>
+        /// <param name="e"> routed event args </param>
         private void onGrabButton(object sender, RoutedEventArgs e)
         {
             // Modal Window
             GrabWindow grabWindow = null;
+            e.Handled = true;
 
             // if there exists an grapped mat
             if (mGrappedFrameMat != null)
@@ -403,26 +338,154 @@ namespace ProbeController
             }
         }
 
-        private async void onRightGroupCommonButtonHandler(object sender, RoutedEventArgs e)
+        /**********************************************************************/
+        /*                                                                    */
+        /*               Servo Motor GroupBox Event Handlers                  */
+        /*                                                                    */
+        /**********************************************************************/
+        /// <summary>
+        /// ServoMotor Confirm Button Event handler
+        /// </summary>
+        /// <param name="sender"> A reference to confirm button control</param>
+        /// <param name="e"> Event args </param>
+        private async void onServoConfirmButton(object sender, RoutedEventArgs e)
         {
-            var eventSource = e.Source as Button;
-            
-            switch(eventSource.Name)
+            bool bDidWell = true;
+
+            double horizontalServoTheta;
+            double verticalServoTheta;
+            e.Handled = true;
+
+            // fetch the value of 2 text boxes (horizontal servo theta value, vertical servo theta value)
+            if (double.TryParse(horizontalServoTextBox.Text, out horizontalServoTheta) == true && double.TryParse(verticalServoTextBox.Text, out verticalServoTheta))
             {
-                case "MoveLeftButton":
-                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 0, RobotProtocol.DCMotorMode.Forward, 150);
-                    break;
-                case "MoveRightButton":
-                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.FORWARD, 80, RobotProtocol.DCMotorMode.BACKWARD, 130);
-                    break;
-                case "MoveForwardButton":
-                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 200, RobotProtocol.DCMotorMode.Forward, 165);
-                    break;
-                case "MoveBackwardButton":
-                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 160, RobotProtocol.DCMotorMode.Backward, 165);
-                    break;
+                bDidWell &= await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Horizontal, horizontalServoTheta);
+                bDidWell &= await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Vertical, verticalServoTheta);
+                
+                if (bDidWell == false)
+                {
+                    MessageBox.Show("Rotation of servo motors has failed.. ");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Either horizontal theta or vertical theta is invalid.. Check Connection!");
             }
 
+        }
+        private async void onHorizontalServoSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            const int MAX_HORIZONTAL_SERVO_THETA = 60;
+            bool bSucceeded = false;
+            double newTheta = 12 * e.NewValue - MAX_HORIZONTAL_SERVO_THETA;
+            e.Handled = true;
+
+            if (mRobotController != null)
+            {
+                bSucceeded = await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Horizontal, newTheta);
+                if (bSucceeded == true)
+                {
+                    horizontalServoTextBox.Text = Convert.ToString(newTheta);
+                }
+                else
+                {
+                    MessageBox.Show("Servo Motor Command has failed.");
+                }
+            }
+        }
+        private async void onVerticalServoSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            const int MAX_VERTICAL_SERVO_DOWN_THETA = 10;
+            bool bSucceeded = false;
+            double newTheta = -10 * e.NewValue + MAX_VERTICAL_SERVO_DOWN_THETA;
+            e.Handled = true;
+
+            if (mRobotController != null)
+            {
+                bSucceeded = await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Vertical, newTheta);
+                if (bSucceeded == true)
+                {
+                    verticalServoTextBox.Text = Convert.ToString(newTheta);
+                }
+                else
+                {
+                    MessageBox.Show("Servo Motor Command has failed.");
+                }
+            }
+        }
+
+        /**********************************************************************/
+        /*                                                                    */
+        /*                DC Motor GroupBox Event Handlers                    */
+        /*                                                                    */
+        /**********************************************************************/
+        /// <summary>
+        /// DC Motor GroupBox Common Event Handler
+        /// </summary>
+        /// <param name="sender"> It is a reference to DC Motor GroupBox  </param>
+        /// <param name="e"> Routed Event </param>
+        private async void onDCMotorGroupBoxCommonHandler(object sender, RoutedEventArgs e)
+        {
+            var eventSource = e.Source as FrameworkElement;
+            bool bSucceeded = false;
+            e.Handled = true;
+
+            switch(eventSource.Name)
+            {
+                // DC Motor Related Buttons
+                case "MoveLeftButton":
+                    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 0, RobotProtocol.DCMotorMode.Forward, 150);
+                    break;
+                case "MoveRightButton":
+                    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 80, RobotProtocol.DCMotorMode.Backward, 130);
+                    break;
+                case "MoveForwardButton":
+                    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 200, RobotProtocol.DCMotorMode.Forward, 165);
+                    break;
+                case "MoveBackwardButton":
+                    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 160, RobotProtocol.DCMotorMode.Backward, 165);
+                    break;
+            }
+            if (bSucceeded == false)
+            {
+                // inform the user that task has failed.
+                MessageBox.Show("DC Motor Command has failed..");
+            }
+        }
+
+        /**********************************************************************/
+        /*                                                                    */
+        /*                  LED GroupBox Event Handlers                       */
+        /*                                                                    */
+        /**********************************************************************/
+        /// <summary>
+        /// LED GroupBox Common Event Handler
+        /// </summary>
+        /// <param name="sender"> It is a reference to LED GroupBox </param>
+        /// <param name="e"> Routed Event </param>
+        private async void onLEDGroupBoxCommonHandler(object sender, RoutedEventArgs e)
+        {
+            var eventSource = e.Source as FrameworkElement;
+            bool bSucceeded = false;
+
+            e.Handled = true;
+
+            // identify the name of the source that raised event  
+            switch(eventSource.Name)
+            {
+                case "leftLEDButton":
+                    bSucceeded = await mRobotController.ToggleLED(RobotProtocol.LEDSide.Left);
+                    break;
+                case "rightLEDButton":
+                    bSucceeded = await mRobotController.ToggleLED(RobotProtocol.LEDSide.Right);
+                    break;
+            }
+            
+            // When toggling LED task has failed, show user a messagebox
+            if (bSucceeded == false)
+            {
+                MessageBox.Show("LED Command failed!!!");
+            }
         }
     }
 }

@@ -7,8 +7,8 @@
         mc:Ignorable="d"
         Title="Probe Main Controller"
         KeyDown="onMainKeyDown"
-        Height="600" Width="1200" MinHeight="600" MinWidth="1200" MaxHeight="600" MaxWidth="1200">
-    <Grid Margin="0,1,0,-1.333">
+        Height="600" Width="1200" ResizeMode="NoResize">
+    <Grid Margin="0,0,0,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="167*"/>
             <RowDefinition Height="23*"/>
@@ -29,53 +29,67 @@
             </StackPanel>
         </StackPanel>
 
-        <!-- Control Panel Group Box -->
-        <GroupBox x:Name="RightGroupBox" Header="Robot Dashboard" Height="414" Width="Auto" Margin="12,10,47.6,0" VerticalAlignment="Top" Grid.Column="1"
-                  Button.Click="onRightGroupCommonButtonHandler">
+        <!-- RobotDashboard GroupBox -->
+        <GroupBox x:Name="RightGroupBox" Header="Robot Dashboard" Height="Auto" Width="Auto" Margin="12,10,47.6,0" VerticalAlignment="Top" Grid.Column="1">
             <!-- Groupbox Contents... In this groupbox, contents are organized using StackPanel-->
-            <StackPanel Width="Auto" Height="Auto" Orientation="Vertical" Margin="5,20,5,0" VerticalAlignment="Top" >
+            <StackPanel Width="Auto" Height="419" Orientation="Vertical" Margin="5,10,5,5" VerticalAlignment="Top" >
                 <!-- IP Address, Port, 2 TextBox, Connect, Disconnect -->
-                <StackPanel HorizontalAlignment="Center" Orientation="Vertical" VerticalAlignment="Center" Width="Auto" Height="Auto">
-                    <StackPanel Height="Auto" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5,0,10,5">
-                        <Label x:Name="ipLabel" Content="IP Address"  MinWidth= "70" MinHeight="30" VerticalAlignment="Center"/>
-                        <TextBox x:Name="ipTextBox" TextWrapping="NoWrap" MinWidth="110" MaxWidth="110" MinHeight="30" MaxHeight="30" Margin="0,0,10,0"  />
-                        <Button x:Name="connectButton" Content="Connect" Click="onConnectButton" MinHeight="30" MinWidth="100" HorizontalAlignment="Center" Margin="0,0,0,0"/>
-                    </StackPanel>
-                    <StackPanel Height="Auto" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5,0,10,0">
-                        <Label x:Name="portLabel" Content="Port"  MinWidth= "70" MinHeight="30" Margin="0,0,0,0" VerticalAlignment="Center"/>
-                        <TextBox x:Name="portTextBox" TextWrapping="NoWrap" MinWidth="110" MaxWidth="110" MinHeight="30" MaxHeight="30" Margin="0,0,10,0"/>
-                        <Button x:Name="disconnectButton" Content="Disconnect" Click="onDisconnectButton" MinHeight="30" MinWidth="100" Margin="0"/>
-                    </StackPanel>
-                </StackPanel>
+
+                <GroupBox x:Name="connectionGroupBox" Header="Connection" Height="Auto">
+                    <Grid Margin="5,5,5,5" HorizontalAlignment="Center" VerticalAlignment="Center" Width="290" Height="Auto">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                        </Grid.RowDefinitions>
+
+                        <Label x:Name="ipLabel" Grid.Row="0" Grid.Column="0" Margin="0,0,0,5" Content="IP Address"  />
+                        <TextBox x:Name="ipTextBox" Grid.Row="0" Grid.Column="1" Width="90" Margin="0,0,0,5" TextWrapping="NoWrap" />
+                        <Button x:Name="connectButton" Grid.Row="0" Grid.Column="2" Margin="0,0,0,5" Content="Connect" Click="onConnectButton" />
+
+                        <Label x:Name="portLabel" Grid.Row="1" Grid.Column="0" Margin="0,0,0,5" Content="Port"  />
+                        <TextBox x:Name="portTextBox" Grid.Row="1" Grid.Column="1" Width="90" Margin="0,0,0,5" TextWrapping="NoWrap" />
+                        <Button x:Name="disconnectButton" Grid.Row="1" Grid.Column="2" Margin="0,0,0,5" Content="Disconnect" Click="onDisconnectButton" />
+
+                    </Grid>
+                </GroupBox>
 
                 <!-- Left LED On, Right LED On -->
-                <Grid Margin="10,10,10,10" >
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1*"/>
-                    </Grid.ColumnDefinitions>
-                    <Button x:Name="LeftLEDButton" Grid.Column="0" Content="Left LED On" Click="onLeftLEDButton" MinHeight="40"/>
-                    <Button x:Name="RightLEDButton" Grid.Column="1" Content="Right LED On" Click="onRightLEDButton" MinHeight="40"/>
-                </Grid>
+                <GroupBox x:Name="LEDGroupBox" Header="LED" Height="Auto" Button.Click="onLEDGroupBoxCommonHandler">
+                    <Grid Margin="10,10,10,10" >
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="leftLEDButton" Grid.Column="0" Content="Left LED On" MinHeight="40"/>
+                        <Button x:Name="rightLEDButton" Grid.Column="1" Content="Right LED On" MinHeight="40"/>
+                    </Grid>
+                </GroupBox>
 
-                <!-- Four available movement button (Move xxxx) -->
-                <Grid Margin="10,10,10,10" >
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1*"/>
-                    </Grid.ColumnDefinitions>
-                    <Button x:Name="MoveLeftButton" Grid.Column="0" Content="Move Left" MinHeight="40" HorizontalAlignment="Left" Width="74"/>
-                    <Button x:Name="MoveRightButton" Grid.Column="1" Content="Move Right" MinHeight="40"/>
-                    <Button x:Name="MoveForwardButton" Grid.Column="2" Content="Move Forwrd" MinHeight="40"/>
-                    <Button x:Name="MoveBackwardButton" Grid.Column="3" Content="Move Backward" MinHeight="40"/>
-                </Grid>
+                <!-- DC Motor Related GroupBox -->
+                <GroupBox x:Name="DCMotorGroupBox" Header="DC Motor" Height="Auto" Button.Click="onDCMotorGroupBoxCommonHandler">
+                    <Grid Margin="10,10,10,10" >
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="MoveLeftButton" Grid.Column="0" Content="←" FontSize="20" MinHeight="40" HorizontalAlignment="Left" Width="74"/>
+                        <Button x:Name="MoveRightButton" Grid.Column="1" Content="→" FontSize="20"  MinHeight="40"/>
+                        <Button x:Name="MoveForwardButton" Grid.Column="2" Content="↑" FontSize="20" MinHeight="40"/>
+                        <Button x:Name="MoveBackwardButton" Grid.Column="3" Content="↓" FontSize="20" MinHeight="40"/>
+                    </Grid>
+                </GroupBox>
 
                 <!-- Horizontal Servo Motor Theta and confirm button -->
                 <GroupBox x:Name="ServoGroupBox" Header="Servo Motor" Height="Auto" >
-                    <Grid Margin="5
-                          ,5,5,5" Height="110">
+                    <Grid Margin="10,10,10,10" Height="110">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="30*"/>
                             <RowDefinition Height="30*"/>
@@ -91,7 +105,7 @@
                         <Label Grid.Column="0" Grid.Row="1" Content="VServo θ:" Margin="0,0.2,2.8,1.6" Grid.RowSpan="2"/>
                         <TextBox Name="horizontalServoTextBox" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Center" Width="60" Margin="8.2,0,3.8,1.8" />
                         <TextBox Name="verticalServoTextBox" Grid.Column="1" Grid.Row="1" HorizontalAlignment="Center" Width="60" Margin="8.2,2.2,3.8,0.6"  />
-                        <Button Name="servoConfirmButton" Grid.Column="2" Content="Confirm" Margin="2.2,0,3.2,0.6" Grid.RowSpan="2" Click="onServoButton"/>
+                        <Button Name="servoConfirmButton" Grid.Column="2" Content="Confirm" Margin="2.2,0,3.2,0.6" Grid.RowSpan="2" Click="onServoConfirmButton"/>
                         <Slider Name="horinzontalServoSlider" Value="5" Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3" VerticalAlignment="Bottom"  Margin="0,0,0,10" ValueChanged="onHorizontalServoSliderValueChanged"/>
                         <Slider Name="verticalServoSlider" Grid.Column="3" Grid.Row="0" Grid.RowSpan="3" Orientation="Vertical" HorizontalAlignment="Center" Value="3" Margin="0,0,0,9.6" ValueChanged="onVerticalServoSliderValueChanged" />
                     </Grid>
@@ -100,7 +114,7 @@
             </StackPanel>
         </GroupBox>
 
-        <!-- Bottom Panel Group Box-->
+        <!-- Bottom Panel GroupBox-->
         <GroupBox x:Name="BottomGroupBox" Header="Image Snippet Dashboard" HorizontalAlignment="Left" Width="480" Height="Auto" Margin="40,0,0,10"  Grid.Row="1" RenderTransformOrigin="0.5,0.5">
             <Grid>
                 <Grid.ColumnDefinitions>

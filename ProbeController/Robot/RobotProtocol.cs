@@ -19,18 +19,18 @@ namespace ProbeController.Robot
         /// <summary>
         /// LED type
         /// </summary>
-        public enum LEDSide { Left, Right };
+        public enum LEDSide { Left, Right, Undefined };
 
         /// <summary>
         /// The types of servo motors 
         /// One of Horizontal, Vertical
         /// </summary>
-        public enum ServoMotorsSide { Horizontal, Vertical }
+        public enum ServoMotorsSide { Horizontal, Vertical, Undefined }
 
         /// <summary>
         /// DC Motor Related enum
         /// </summary>
-        public enum DCMotorMode { Forward, Backward, Break, Release };
+        public enum DCMotorMode { Forward, Backward, Break, Release, Undefined };
 
         /// <summary>
         /// It represents data packet class and it'll be used to be converted into json string

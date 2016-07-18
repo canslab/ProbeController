@@ -7,9 +7,19 @@ namespace ProbeController.Robot
     // this partial class copes with command related methods
     public partial class RobotController
     {
+        /// <summary>
+        /// Whether the left side LED is turned on or not 
+        /// </summary>
+        public bool IsLeftLEDOn { get; private set; } = false;
+
+        /// <summary>
+        /// Whether the right side LED is turned on or not 
+        /// </summary>
+        public bool IsRightLEDOn { get; private set; } = false;
+
         public readonly Vector FACEVECTOR = new Vector(0, 1);
         protected enum MoveDirection { LEFT, RIGHT, STILL, UNDEF };
-
+                
         /// <summary>
         /// Turn on Robot's LED
         /// </summary>
@@ -19,21 +29,53 @@ namespace ProbeController.Robot
         public async Task<bool> TurnOnLED(RobotProtocol.LEDSide side, bool bOn)
         {
             bool bSucceeded = false;
-            string madeJSONCommand = RobotProtocol.MakeLEDCommand(side, bOn);
 
-            // if made json command is invalid, return false! 
-            if (madeJSONCommand == null)
+            // First of all, CanCommunicate should be true in order to send command 
+            if (CanCommunicate)
             {
-                bSucceeded = false;
-            }
-            // if made json command is valid, send this command to remote robot using Communicator(RobotCommunicator)
-            else
-            {
-                // asynchronously send made json command to the remote device
-                bSucceeded = await Communicator.SendJSONStringAsnyc(madeJSONCommand);
-            }
+                // retrieve LED json command
+                string madeJSONCommand = RobotProtocol.MakeLEDCommand(side, bOn);
 
+                // if made json command is invalid, bSucceeded must be assigned to false
+                if (madeJSONCommand == null)
+                {
+                    bSucceeded = false;
+                }
+                // otherwise, invoke SendJSONStringAsync()
+                else
+                {
+                    bSucceeded = await Communicator.SendJSONStringAsnyc(madeJSONCommand);
+                }
+
+            }
+            
             // return whether this function works well or not
+            return bSucceeded;
+        }
+
+        /// <summary>
+        /// Toggle LED using TurnOnLED
+        /// </summary>
+        /// <param name="side"> Which side user want to toggle, (Left or Right) </param>
+        /// <returns> The result of this method </returns>
+        public async Task<bool> ToggleLED(RobotProtocol.LEDSide side)
+        {
+            bool bSucceeded = false;
+
+            // If turning on led task has been done successfully, toggle the corresponding property
+            // otherwise, let it be.
+            if (side == RobotProtocol.LEDSide.Left)
+            {
+                // invoke TurnOnLED method asynchronosuly.
+                bSucceeded = await TurnOnLED(side, !IsLeftLEDOn);
+                IsLeftLEDOn = (bSucceeded == true) ? !IsLeftLEDOn : IsLeftLEDOn;
+            }
+            else if (side == RobotProtocol.LEDSide.Right)
+            {
+                bSucceeded = await TurnOnLED(side, !IsRightLEDOn);
+                IsRightLEDOn = (bSucceeded == true) ? !IsRightLEDOn : IsRightLEDOn;
+            }
+
             return bSucceeded;
         }
         
@@ -42,29 +84,44 @@ namespace ProbeController.Robot
         /// and how much it'll roate by is given by the second argument
         /// 
         /// </summary>
-        /// <param name="whatMotor"> horizontal servo or vertical servo </param>
+        /// <param name="side"> horizontal servo or vertical servo </param>
         /// <param name="theta"> the value of theta </param>
         /// <returns> whether this task succeeded or not </returns>
-        public async Task<bool> RotateServoMotors(RobotProtocol.ServoMotorsSide whatMotor, double theta)
+        public async Task<bool> RotateServoMotors(RobotProtocol.ServoMotorsSide side, double theta)
         {
             bool bSucceeded = false;
-
-            var dutyCycleDouble = (whatMotor == RobotProtocol.ServoMotorsSide.Horizontal) ? (-2 * theta + 451) : (-2.27 * theta + 309);
-
-            // theta to duty cycle function is needed ... 
-            var numDutyCycle = (int)Math.Floor(dutyCycleDouble);
-
-            string madeJSONCommand = RobotProtocol.MakeServoMotorsCommand(whatMotor, numDutyCycle);
+            int numDutyCycle = 0;
+            string madeJSONCommand = null;
             
-            if (madeJSONCommand == null)
+            // First of all, can we send a message by checking CanCommunicate property
+            if (CanCommunicate)
             {
-                bSucceeded = false;
-            }
-            else
-            {
-                bSucceeded = await Communicator.SendJSONStringAsnyc(madeJSONCommand);
+                // get duty cycle that corresponds to the given theta 
+                numDutyCycle = getDutyCycleWhenThetaIs(side, theta);
+
+                // make JSON command 
+                madeJSONCommand = RobotProtocol.MakeServoMotorsCommand(side, numDutyCycle);
+                if (madeJSONCommand == null)
+                {
+                    bSucceeded = false;
+                }
+                else
+                {
+                    bSucceeded = await Communicator.SendJSONStringAsnyc(madeJSONCommand);
+                }
             }
             return bSucceeded;
+        }
+
+        /// <summary>
+        /// Transforms theta to corresponding duty cycle
+        /// </summary>
+        /// <param name="side"> Which side do you want to get duty cycle </param>
+        /// <param name="theta"> Theta value</param>
+        /// <returns> Corresponding duty cycle </returns>
+        protected int getDutyCycleWhenThetaIs(RobotProtocol.ServoMotorsSide side ,double theta)
+        {
+            return (int)((side == RobotProtocol.ServoMotorsSide.Horizontal) ? (-2 * theta + 451) : (-2.27 * theta + 309));
         }
 
         public async Task<bool> FaceRobotUsingVector(Vector directionVector)
@@ -115,15 +172,6 @@ namespace ProbeController.Robot
             }
 
             return retDirection;
-        }
-        protected int getDutyCycleWhenThetaIs(double theta)
-        {
-            int retDutyCycle = 0;
-
-
-
-
-            return retDutyCycle;
         }
     }
 }
