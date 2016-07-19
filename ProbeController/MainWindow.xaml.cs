@@ -28,8 +28,7 @@ namespace ProbeController
         // user defined frame snippet (subset of a frame)
         private Cv2.Point mFrameSnippetLocation;
         private Cv2.Size mFrameSnippetSize;
-
-        private bool mbGrapping;
+        private bool mbIsNowGrapping;
         private Cv2.Mat mGrappedFrameMat;
 
         private static string STREAM_URL = "http://devjhlab.iptime.org:8080/?action=stream";
@@ -58,7 +57,7 @@ namespace ProbeController
             verticalServoTextBox.Text = "0";
             horizontalServoTextBox.Text = "0";
 
-            mbGrapping = false;
+            mbIsNowGrapping = false;
         }
         protected override void OnInitialized(EventArgs e)
         {
@@ -114,7 +113,7 @@ namespace ProbeController
                 eachFrame.Release();
             }
 
-            if (mbGrapping == true)
+            if (mbIsNowGrapping == true)
             {
                 mGrappedFrameMat = await mStreamReceiver.GetFrameAsMatAsync();
                 Console.WriteLine("{0},{1}", mGrappedFrameMat.Width, mGrappedFrameMat.Height);
@@ -179,7 +178,7 @@ namespace ProbeController
         }
         private void onDisconnectButton(object sender, RoutedEventArgs e)
         {
-            mCommunicator.Disconnect();
+            mRobotController.DetachCommunicatorAndCloseIt();
             e.Handled = true;
 
             connectButton.IsEnabled = true;
@@ -192,35 +191,53 @@ namespace ProbeController
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async void onMainKeyDown(object sender, KeyEventArgs e)
+        private async void onMainWindowKeyDown(object sender, KeyEventArgs e)
         {
-            switch(e.Key)
+            if (mRobotController.CanCommunicate)
             {
-                case Key.F3:
-                    //await mCommunicator.IssueLEDCommandAsync(RobotProtocol.LEDSide.Left, bLeftLEDButtonClicked);
-                    //bLeftLEDButtonClicked = !bLeftLEDButtonClicked;
-                    break;
-                case Key.F4:
-                    //await mCommunicator.IssueLEDCommandAsync(RobotProtocol.LEDSide.Right, bRightLEDButtonClicked);
-                    //bRightLEDButtonClicked = !bRightLEDButtonClicked;
-                    break;
-                case Key.W:
-                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 200, RobotProtocol.DCMotorMode.Forward, 165);
-                    break;
-                case Key.A:
-                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 0, RobotProtocol.DCMotorMode.Forward, 150);
-                    //await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 140, RobotProtocol.DCMotorMode.Forward, 80);
-                    break;
-                case Key.S:
-                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 160, RobotProtocol.DCMotorMode.Backward, 165);
-                    break;
-                case Key.D:
-                    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 150, RobotProtocol.DCMotorMode.Forward, 0);
-                    //for(int i = 0; i < 14; ++i)
-                    //{
-                    //    await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 70, RobotProtocol.DCMotorMode.Backward, 140);
-                    //}
-                    break;
+                bool bSucceeded = true;
+                switch (e.Key)
+                {
+                    case Key.F3:
+                        bSucceeded = await OrderToggleLED(RobotProtocol.LEDSide.Left);
+                        e.Handled = true;
+                        break;
+                    case Key.F4:
+                        bSucceeded = await OrderToggleLED(RobotProtocol.LEDSide.Right);
+                        e.Handled = true;
+                        break;
+                    case Key.W:
+                        bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 200, RobotProtocol.DCMotorMode.Forward, 165);
+                        break;
+                    case Key.A:
+                        bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 0, RobotProtocol.DCMotorMode.Forward, 150);
+                        break;
+                    case Key.S:
+                        bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 160, RobotProtocol.DCMotorMode.Backward, 165);
+                        break;
+                    case Key.D:
+                        bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 150, RobotProtocol.DCMotorMode.Forward, 0);
+                        break;
+
+                    case Key.Left:
+                        horinzontalServoSlider.Value -= 0.2;
+                        break;
+                    case Key.Right:
+                        horinzontalServoSlider.Value += 0.2;
+                        break;
+                    case Key.Up:
+                        verticalServoSlider.Value += 0.2;
+                        break;
+                    case Key.Down:
+                        verticalServoSlider.Value -= 0.2;
+                        break;
+                    
+                }
+
+                if (bSucceeded == false)
+                {
+                    MessageBox.Show("Keyboard command has failed...");
+                }
             }
         }
         
@@ -235,7 +252,7 @@ namespace ProbeController
             e.Handled = true;
             
             // only when user is now grapping an image.. calculate the region.
-            if (mbGrapping == true)
+            if (mbIsNowGrapping == true)
             {
                 // calculate the Width and Height of snippet frame.
                 mFrameSnippetSize.Width = (int)Math.Abs(mouseUpPosition.X - mFrameSnippetLocation.X);
@@ -269,7 +286,7 @@ namespace ProbeController
                 }
 
                 // Grapping is done
-                mbGrapping = false;
+                mbIsNowGrapping = false;
 
                 // restart streaming 
                 onStartStreamButton(startStreamButton, e);
@@ -291,7 +308,7 @@ namespace ProbeController
                 mFrameSnippetLocation.Y = (int)mouseDownPosition.Y;
                 
                 // set grapping flag to true
-                mbGrapping = true;
+                mbIsNowGrapping = true;
 
                 // pause streaming
                 bIsCameraWorking = false;
@@ -350,28 +367,33 @@ namespace ProbeController
         /// <param name="e"> Event args </param>
         private async void onServoConfirmButton(object sender, RoutedEventArgs e)
         {
-            bool bDidWell = true;
+            bool bSucceeded = await OrderRotateServoMotorsUsingTextBoxes(horizontalServoTextBox.Text, verticalServoTextBox.Text);
 
-            double horizontalServoTheta;
-            double verticalServoTheta;
-            e.Handled = true;
-
-            // fetch the value of 2 text boxes (horizontal servo theta value, vertical servo theta value)
-            if (double.TryParse(horizontalServoTextBox.Text, out horizontalServoTheta) == true && double.TryParse(verticalServoTextBox.Text, out verticalServoTheta))
+            if(bSucceeded == false)
             {
-                bDidWell &= await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Horizontal, horizontalServoTheta);
-                bDidWell &= await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Vertical, verticalServoTheta);
-                
-                if (bDidWell == false)
+                MessageBox.Show("Rotate Servo Motor Command has failed..");
+            }
+        }
+        /// <summary>
+        /// When user pressed 'Enter' key focused from the one of servo text boxes.
+        /// Confirm event will be invoked
+        /// If other key was pressed, it'll ignore that key.
+        /// </summary>
+        private async void onKeyDownFromServoTextBoxes(object sender, KeyEventArgs e)
+        {
+            // when user pressed enter key
+            if (e.Key == Key.Enter)
+            {
+                bool bSucceded = await OrderRotateServoMotorsUsingTextBoxes(horizontalServoTextBox.Text, verticalServoTextBox.Text);
+                if (bSucceded == false)
                 {
-                    MessageBox.Show("Rotation of servo motors has failed.. ");
+                    MessageBox.Show("Rotate Servo Motor Command has failed..");
                 }
             }
-            else
+            else if ((e.Key != Key.OemMinus && e.Key != Key.Tab) && (e.Key < Key.D0 || e.Key > Key.D9))
             {
-                MessageBox.Show("Either horizontal theta or vertical theta is invalid.. Check Connection!");
+                e.Handled = true;
             }
-
         }
         private async void onHorizontalServoSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
@@ -474,10 +496,10 @@ namespace ProbeController
             switch(eventSource.Name)
             {
                 case "leftLEDButton":
-                    bSucceeded = await mRobotController.ToggleLED(RobotProtocol.LEDSide.Left);
+                    bSucceeded = await OrderToggleLED(RobotProtocol.LEDSide.Left);
                     break;
                 case "rightLEDButton":
-                    bSucceeded = await mRobotController.ToggleLED(RobotProtocol.LEDSide.Right);
+                    bSucceeded = await OrderToggleLED(RobotProtocol.LEDSide.Right);
                     break;
             }
             

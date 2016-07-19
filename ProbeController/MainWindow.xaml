@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:ProbeController"
         mc:Ignorable="d"
         Title="Probe Main Controller"
-        KeyDown="onMainKeyDown"
+        KeyDown="onMainWindowKeyDown"
         Height="600" Width="1200" ResizeMode="NoResize">
     <Grid Margin="0,0,0,0">
         <Grid.RowDefinitions>
@@ -103,8 +103,8 @@
                         </Grid.ColumnDefinitions>
                         <Label Grid.Column="0" Grid.Row="0" Content="HServo θ:" Margin="0,0,2.8,0.6" Grid.RowSpan="2"/>
                         <Label Grid.Column="0" Grid.Row="1" Content="VServo θ:" Margin="0,0.2,2.8,1.6" Grid.RowSpan="2"/>
-                        <TextBox Name="horizontalServoTextBox" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Center" Width="60" Margin="8.2,0,3.8,1.8" />
-                        <TextBox Name="verticalServoTextBox" Grid.Column="1" Grid.Row="1" HorizontalAlignment="Center" Width="60" Margin="8.2,2.2,3.8,0.6"  />
+                        <TextBox Name="horizontalServoTextBox" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Center" Width="60" Margin="8.2,0,3.8,1.8" KeyDown="onKeyDownFromServoTextBoxes"  />
+                        <TextBox Name="verticalServoTextBox" Grid.Column="1" Grid.Row="1" HorizontalAlignment="Center" Width="60" Margin="8.2,2.2,3.8,0.6" KeyDown="onKeyDownFromServoTextBoxes" />
                         <Button Name="servoConfirmButton" Grid.Column="2" Content="Confirm" Margin="2.2,0,3.2,0.6" Grid.RowSpan="2" Click="onServoConfirmButton"/>
                         <Slider Name="horinzontalServoSlider" Value="5" Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3" VerticalAlignment="Bottom"  Margin="0,0,0,10" ValueChanged="onHorizontalServoSliderValueChanged"/>
                         <Slider Name="verticalServoSlider" Grid.Column="3" Grid.Row="0" Grid.RowSpan="3" Orientation="Vertical" HorizontalAlignment="Center" Value="3" Margin="0,0,0,9.6" ValueChanged="onVerticalServoSliderValueChanged" />
