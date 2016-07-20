@@ -33,36 +33,6 @@ namespace ProbeController.Robot
         public enum DCMotorMode { Forward, Backward, Break, Release, Undefined };
 
         /// <summary>
-        /// It represents data packet class and it'll be used to be converted into json string
-        /// </summary>
-        protected class DataPacket
-        {
-            public string Target { get; set; }
-            public List<object> Params { get; set; }
-        
-            /// <summary>
-            /// Make DataPacket using device type, and a set of parameter values
-            /// </summary>
-            /// <param name="deviceType"> device type, ex) LED</param>
-            /// <param name="values"> associated values, ex) "Left", 0 </param>
-            public DataPacket(string deviceType, params object[] values)
-            {
-                Target = deviceType;
-                Params = new List<object>(values.Length);
-
-                foreach(string value in values)
-                {
-                    Params.Add(value);
-                }
-            }
-            public DataPacket()
-            {
-                Target = null;
-                Params = new List<object>();
-            }
-        }
-
-        /// <summary>
         /// Make LED control command(=json string)
         /// </summary>
         /// <param name="ledType"> LED Side </param>
@@ -164,6 +134,36 @@ namespace ProbeController.Robot
                 dataPacket.Params.Add("Release");
             }
             dataPacket.Params.Add(numDCMotorValue);
+        }
+       
+        /// <summary>
+        /// It represents data packet class and it'll be used to be converted into json string
+        /// </summary>
+        protected class DataPacket
+        {
+            public string Target { get; set; }
+            public List<object> Params { get; set; }
+        
+            /// <summary>
+            /// Make DataPacket using device type, and a set of parameter values
+            /// </summary>
+            /// <param name="deviceType"> device type, ex) LED</param>
+            /// <param name="values"> associated values, ex) "Left", 0 </param>
+            public DataPacket(string deviceType, params object[] values)
+            {
+                Target = deviceType;
+                Params = new List<object>(values.Length);
+
+                foreach(string value in values)
+                {
+                    Params.Add(value);
+                }
+            }
+            public DataPacket()
+            {
+                Target = null;
+                Params = new List<object>();
+            }
         }
     }
 }

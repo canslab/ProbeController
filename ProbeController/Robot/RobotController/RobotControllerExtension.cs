@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using System.Windows;
 
 namespace ProbeController.Robot
@@ -26,7 +25,7 @@ namespace ProbeController.Robot
         /// <param name="side"> Left side or Right side</param>
         /// <param name="bOn"> Turn on or not</param>
         /// <returns> whether the command has been successfully submitted or not </returns>
-        public async Task<bool> TurnOnLED(RobotProtocol.LEDSide side, bool bOn)
+        public async Task<bool> TurnOnLEDAsync(RobotProtocol.LEDSide side, bool bOn)
         {
             bool bSucceeded = false;
 
@@ -58,7 +57,7 @@ namespace ProbeController.Robot
         /// </summary>
         /// <param name="side"> Which side user want to toggle, (Left or Right) </param>
         /// <returns> The result of this method </returns>
-        public async Task<bool> ToggleLED(RobotProtocol.LEDSide side)
+        public async Task<bool> ToggleLEDAsync(RobotProtocol.LEDSide side)
         {
             bool bSucceeded = false;
 
@@ -67,12 +66,12 @@ namespace ProbeController.Robot
             if (side == RobotProtocol.LEDSide.Left)
             {
                 // invoke TurnOnLED method asynchronosuly.
-                bSucceeded = await TurnOnLED(side, !IsLeftLEDOn);
+                bSucceeded = await TurnOnLEDAsync(side, !IsLeftLEDOn);
                 IsLeftLEDOn = (bSucceeded == true) ? !IsLeftLEDOn : IsLeftLEDOn;
             }
             else if (side == RobotProtocol.LEDSide.Right)
             {
-                bSucceeded = await TurnOnLED(side, !IsRightLEDOn);
+                bSucceeded = await TurnOnLEDAsync(side, !IsRightLEDOn);
                 IsRightLEDOn = (bSucceeded == true) ? !IsRightLEDOn : IsRightLEDOn;
             }
 
@@ -87,7 +86,7 @@ namespace ProbeController.Robot
         /// <param name="side"> horizontal servo or vertical servo </param>
         /// <param name="theta"> the value of theta </param>
         /// <returns> whether this task succeeded or not </returns>
-        public async Task<bool> RotateServoMotors(RobotProtocol.ServoMotorsSide side, double theta)
+        public async Task<bool> RotateServoMotorsAsync(RobotProtocol.ServoMotorsSide side, double theta)
         {
             bool bSucceeded = false;
             int numDutyCycle = 0;

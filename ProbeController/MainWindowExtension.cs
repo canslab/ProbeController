@@ -29,13 +29,13 @@ namespace ProbeController
         /// <summary>
         /// Common Function to toggle LED 
         /// </summary>
-        private async Task<bool> OrderToggleLED(RobotProtocol.LEDSide side)
+        private async Task<bool> OrderToggleLEDAsync(RobotProtocol.LEDSide side)
         {
             bool bSucceeded = false;
 
             if(mRobotController != null)
             {
-                bSucceeded = await mRobotController.ToggleLED(side);
+                bSucceeded = await mRobotController.ToggleLEDAsync(side);
             }
             else
             {
@@ -51,7 +51,7 @@ namespace ProbeController
         /// <param name="horizontalServoThetaText"> horizontal theta text box's Text </param>
         /// <param name="verticalServoThetaText"> vertical theta text box's Text </param>
         /// <returns> Check whether ordering rotation of servo motors did well or not </returns>
-        private async Task<bool> OrderRotateServoMotorsUsingTextBoxes(string horizontalServoThetaText, string verticalServoThetaText)
+        private async Task<bool> OrderRotateServoMotorsUsingTextBoxesAsync(string horizontalServoThetaText, string verticalServoThetaText)
         {
             bool bSucceeded = true;
             double horizontalServoTheta, verticalServoTheta;
@@ -59,8 +59,8 @@ namespace ProbeController
             // fetch the value of 2 text boxes (horizontal servo theta value, vertical servo theta value)
             if (double.TryParse(horizontalServoThetaText, out horizontalServoTheta) == true && double.TryParse(verticalServoThetaText, out verticalServoTheta))
             {
-                bSucceeded &= await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Horizontal, horizontalServoTheta);
-                bSucceeded &= await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Vertical, verticalServoTheta);
+                bSucceeded &= await mRobotController.RotateServoMotorsAsync(RobotProtocol.ServoMotorsSide.Horizontal, horizontalServoTheta);
+                bSucceeded &= await mRobotController.RotateServoMotorsAsync(RobotProtocol.ServoMotorsSide.Vertical, verticalServoTheta);
 
             }
             // when input values are not valid 

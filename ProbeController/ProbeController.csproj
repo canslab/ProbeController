@@ -103,8 +103,8 @@
     </Compile>
     <Compile Include="MainWindowPartial.cs" />
     <Compile Include="Robot\RobotCommunicator.cs" />
-    <Compile Include="Robot\RobotController\RobotController.cs" />
-    <Compile Include="Robot\RobotController\RobotControllerCommand.cs" />
+    <Compile Include="Robot\RobotController\RobotControllerMain.cs" />
+    <Compile Include="Robot\RobotController\RobotControllerExtension.cs" />
     <Compile Include="Robot\RobotProtocol.cs" />
     <Page Include="GrabWindow.xaml">
       <SubType>Designer</SubType>

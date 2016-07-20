@@ -16,29 +16,6 @@ namespace ProbeController.Robot
     public class RobotCommunicator
     {
         /// <summary>
-        /// Issues command related to robot's 2 LEDs
-        /// </summary>
-        /// <param name="side">Left side or Right side</param>
-        /// <param name="bOn"> Turn on or Off</param>
-        /// <returns> did well or not </returns>
-        public async Task<bool> IssueLEDCommandAsync(RobotProtocol.LEDSide side, bool bOn)
-        {
-            string madeJsonCommand = RobotProtocol.MakeLEDCommand(side, bOn);
-            bool bDidWell = false;
-
-            if (madeJsonCommand == null)
-            {
-                bDidWell = false;
-            }
-            else
-            {
-                bDidWell = await SendJSONStringAsnyc(madeJsonCommand);
-            }
-
-            return bDidWell;
-        }
-
-        /// <summary>
         /// Issusing DC Motor control command 
         /// </summary>
         /// <param name="leftDCMotorMode"> Left DC Motor mode (Forward, Backward, Break, Release) </param>
@@ -81,44 +58,39 @@ namespace ProbeController.Robot
         /// Connect to the remote robot designated by IP address and port number that has already given from constructor
         /// 
         /// Caution : If the robot has been already connected then this function returns false. 
-        /// If you want to connect to the other device, then call Disconnect() and try this again.
+        /// If you want to connect to another device, invoke Disconnect() and try this again.
         /// </summary>
         /// <param name="ip"> ip Address of the remote robot </param>
-        /// <param name="portNumber"> port number of the remote robot</param>
+        /// <param name="remoteRobotPortNumber"> port number of the remote robot</param>
         /// <returns> Whether the connection has failed or not </returns>
-        public async Task<bool> ConnectToURLAsync(string url, int portNumber)
+        public async Task<bool> ConnectToURLAsync(string remoteRobotURL, int remoteRobotPortNumber)
         {
-            IPAddress hostIPAddress = null;
-            bool bSucceed = false;
+            IPAddress convertedRemoteRobotIPAddress = null;
 
             // at least one argument is not valid  --> return false
-            if (url == null || (portNumber < 0 || portNumber > 65536 ))
+            if (Connected == true || remoteRobotURL == null || (remoteRobotPortNumber < 0 || remoteRobotPortNumber > 65536 ))
             {
                 return false;
-            }
-
-            try
-            {
-                // try to find the IP Address of the URL 
-                hostIPAddress = Dns.GetHostAddresses(url)[0];
-                
-            }
-            catch (SocketException socketEx)
-            {
-                // if there is an error, return false
-                Debug.WriteLine("ConnectToURLAsync() Error, RSN > {0}", socketEx.Message);
-                return false;
-            }
-
-            // connect to the remote device using host ip address, and port number
-            bSucceed = await connectAsync(hostIPAddress, portNumber);
-            if(bSucceed)
-            {
-                return true;
             }
             else
             {
-                return false;
+                try
+                {
+                    // try to find the IP Address of the URL 
+                    convertedRemoteRobotIPAddress = Dns.GetHostAddresses(remoteRobotURL)[0];
+                    await ClientSocket.ConnectAsync(convertedRemoteRobotIPAddress, remoteRobotPortNumber);
+                }
+                catch (SocketException socketEx)
+                {
+                    // if there is an error, return false
+                    Debug.WriteLine("ConnectToURLAsync() Error, RSN > {0}", socketEx.Message);
+                    return false;
+                }
+
+                // If connection has succeded 
+                IP = convertedRemoteRobotIPAddress;
+                PortNumber = remoteRobotPortNumber;
+                return true;
             }
         }
 
@@ -166,7 +138,7 @@ namespace ProbeController.Robot
         /// <returns> Whether this function works well or not </returns>
         public async Task<bool> SendJSONStringAsnyc(string jsonString)
         {
-            byte[] jsonByteArray = makePacket(jsonString);
+            byte[] jsonByteArray = convertJSONStringToByteArray(jsonString);
             return await SendBytesAsync(jsonByteArray, 0, jsonByteArray.Length);
         }          
 
@@ -194,11 +166,20 @@ namespace ProbeController.Robot
         {
             get
             {
-                return ClientSocket.Connected;
+                bool? bConnected = ClientSocket?.Connected;
+
+                if (bConnected == null)
+                {
+                    return false;
+                }
+                else
+                {
+                    return bConnected.Value;
+                }
             }
         }        
 
-        protected byte[] makePacket(string jsonData)
+        protected byte[] convertJSONStringToByteArray(string jsonData)
         {
             // first 4 byte is the length of json data
             Int32 strDataLength = jsonData.Length;
@@ -214,40 +195,5 @@ namespace ProbeController.Robot
 
             return sentByteArray;
         }
-       
-        /// <summary>
-        /// Connect to the remote robot designated by IP address and port number that has already given from constructor
-        /// 
-        /// Protected method
-        /// Caution : If the robot has been already connected then this function returns false. 
-        /// If you want to connect to the other device, then call Disconnect() and try this again.
-        /// </summary>
-        /// <param name="ip"> ip Address of the remote robot </param>
-        /// <param name="portNumber"> port number of the remote robot</param>
-        /// <returns> Whether the connection has failed or not </returns>
-        protected async Task<bool> connectAsync(IPAddress ip, int portNumber)
-        {
-            if (Connected == true) 
-            {
-                // If there is already connection, return false!  
-                return false;
-            }
-
-            try
-            {
-                // try connection
-                await ClientSocket.ConnectAsync(ip, portNumber);
-            }
-            catch(Exception e)
-            {
-                Debug.WriteLine("robot connection failed RSN > {0}", e.Message);
-                return false;
-            }
-            IP = ip;
-            // if the connection has succeed, store the ip address and the port number 
-            PortNumber = portNumber;
-            return true;
-        }
-
     }
 }

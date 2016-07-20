@@ -12,18 +12,15 @@ using System.Windows.Media.Imaging;
 using JHStreamReceiver;
 using ProbeController.Robot;
 using Cv2 = OpenCvSharp;
-using System.Windows.Controls;
+
 
 namespace ProbeController
 {
     public partial class MainWindow : Window
     {
         private WriteableBitmap mWb;
-        // stream receiver
-        private StreamReceiver mStreamReceiver;
-        // communicator to robot
-        private RobotCommunicator mCommunicator;
-        private RobotController mRobotController;
+        private StreamReceiver mStreamReceiver;     // Stream Receiver
+        private RobotController mRobotController;   // Robot Controller
 
         // user defined frame snippet (subset of a frame)
         private Cv2.Point mFrameSnippetLocation;
@@ -31,7 +28,7 @@ namespace ProbeController
         private bool mbIsNowGrapping;
         private Cv2.Mat mGrappedFrameMat;
 
-        private static string STREAM_URL = "http://devjhlab.iptime.org:8080/?action=stream";
+        private readonly string STREAM_URL = "http://devjhlab.iptime.org:8080/?action=stream";
 
         /// <summary>
         /// Constructor
@@ -47,7 +44,6 @@ namespace ProbeController
 
             endStreamButton.IsEnabled = false;
             disconnectButton.IsEnabled = false;
-            mCommunicator = new RobotCommunicator();
             mRobotController = new RobotController();
 
             //mFrameSnippetBottomRightLocaiton = new Cv2.Point(0.0f, 0.0f);
@@ -143,14 +139,16 @@ namespace ProbeController
 
         private async void onConnectButton(object sender, RoutedEventArgs e)
         {
-            int portNumber;
-            string ipAddress;
+            int remoteRobotPortNumber;
+            string remoteRobotIPAddress;
+            bool bConnectionSucceded = false;
 
             e.Handled = true;
-            ipAddress = ipTextBox.Text;
+            remoteRobotIPAddress = ipTextBox.Text;
+
             try
             {
-                portNumber = int.Parse(portTextBox.Text);
+                remoteRobotPortNumber = int.Parse(portTextBox.Text);
             }
             catch(Exception argException)
             {
@@ -158,22 +156,18 @@ namespace ProbeController
                 return;
             }
 
-            bool bConnectionSuccess = await mCommunicator.ConnectToURLAsync(ipTextBox.Text, int.Parse(portTextBox.Text));
-                        
-            if (bConnectionSuccess == false)
+            //bool bConnectionSuccess = await mCommunicator.ConnectToURLAsync(ipTextBox.Text, int.Parse(portTextBox.Text));
+            bConnectionSucceded = await mRobotController.AddCommunicatorAsync(ipTextBox.Text, remoteRobotPortNumber);              
+
+            if (bConnectionSucceded == false)
             {
+                mRobotController.DetachCommunicatorAndCloseIt();
                 MessageBox.Show("Robot Connection Failed, check your remote deivce");
             }
             else
             {
                 disconnectButton.IsEnabled = true;
                 connectButton.IsEnabled = false;
-                bool bAttachedWell = mRobotController.AttachCommunicator(mCommunicator);
-                if (bAttachedWell == false)
-                {
-                    MessageBox.Show("Attachment task has failed!! check it!");
-                    mRobotController.DetachCommunicator();
-                }
             }
         }
         private void onDisconnectButton(object sender, RoutedEventArgs e)
@@ -183,7 +177,6 @@ namespace ProbeController
 
             connectButton.IsEnabled = true;
             disconnectButton.IsEnabled = false;
-            
         }
 
         /// <summary>
@@ -199,25 +192,25 @@ namespace ProbeController
                 switch (e.Key)
                 {
                     case Key.F3:
-                        bSucceeded = await OrderToggleLED(RobotProtocol.LEDSide.Left);
+                        bSucceeded = await OrderToggleLEDAsync(RobotProtocol.LEDSide.Left);
                         e.Handled = true;
                         break;
                     case Key.F4:
-                        bSucceeded = await OrderToggleLED(RobotProtocol.LEDSide.Right);
+                        bSucceeded = await OrderToggleLEDAsync(RobotProtocol.LEDSide.Right);
                         e.Handled = true;
                         break;
-                    case Key.W:
-                        bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 200, RobotProtocol.DCMotorMode.Forward, 165);
-                        break;
-                    case Key.A:
-                        bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 0, RobotProtocol.DCMotorMode.Forward, 150);
-                        break;
-                    case Key.S:
-                        bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 160, RobotProtocol.DCMotorMode.Backward, 165);
-                        break;
-                    case Key.D:
-                        bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 150, RobotProtocol.DCMotorMode.Forward, 0);
-                        break;
+                    //case Key.W:
+                    //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 200, RobotProtocol.DCMotorMode.Forward, 165);
+                    //    break;
+                    //case Key.A:
+                    //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 0, RobotProtocol.DCMotorMode.Forward, 150);
+                    //    break;
+                    //case Key.S:
+                    //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 160, RobotProtocol.DCMotorMode.Backward, 165);
+                    //    break;
+                    //case Key.D:
+                    //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 150, RobotProtocol.DCMotorMode.Forward, 0);
+                    //    break;
 
                     case Key.Left:
                         horinzontalServoSlider.Value -= 0.2;
@@ -240,7 +233,7 @@ namespace ProbeController
                 }
             }
         }
-        
+
         /**********************************************************************/
         /*                                                                    */
         /*       Grabbing Snippet Image Event Handlers (Drag Feature)         */
@@ -367,7 +360,7 @@ namespace ProbeController
         /// <param name="e"> Event args </param>
         private async void onServoConfirmButton(object sender, RoutedEventArgs e)
         {
-            bool bSucceeded = await OrderRotateServoMotorsUsingTextBoxes(horizontalServoTextBox.Text, verticalServoTextBox.Text);
+            bool bSucceeded = await OrderRotateServoMotorsUsingTextBoxesAsync(horizontalServoTextBox.Text, verticalServoTextBox.Text);
 
             if(bSucceeded == false)
             {
@@ -384,7 +377,7 @@ namespace ProbeController
             // when user pressed enter key
             if (e.Key == Key.Enter)
             {
-                bool bSucceded = await OrderRotateServoMotorsUsingTextBoxes(horizontalServoTextBox.Text, verticalServoTextBox.Text);
+                bool bSucceded = await OrderRotateServoMotorsUsingTextBoxesAsync(horizontalServoTextBox.Text, verticalServoTextBox.Text);
                 if (bSucceded == false)
                 {
                     MessageBox.Show("Rotate Servo Motor Command has failed..");
@@ -404,7 +397,7 @@ namespace ProbeController
 
             if (mRobotController != null)
             {
-                bSucceeded = await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Horizontal, newTheta);
+                bSucceeded = await mRobotController.RotateServoMotorsAsync(RobotProtocol.ServoMotorsSide.Horizontal, newTheta);
                 if (bSucceeded == true)
                 {
                     horizontalServoTextBox.Text = Convert.ToString(newTheta);
@@ -424,7 +417,7 @@ namespace ProbeController
 
             if (mRobotController != null)
             {
-                bSucceeded = await mRobotController.RotateServoMotors(RobotProtocol.ServoMotorsSide.Vertical, newTheta);
+                bSucceeded = await mRobotController.RotateServoMotorsAsync(RobotProtocol.ServoMotorsSide.Vertical, newTheta);
                 if (bSucceeded == true)
                 {
                     verticalServoTextBox.Text = Convert.ToString(newTheta);
@@ -455,18 +448,18 @@ namespace ProbeController
             switch(eventSource.Name)
             {
                 // DC Motor Related Buttons
-                case "MoveLeftButton":
-                    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 0, RobotProtocol.DCMotorMode.Forward, 150);
-                    break;
-                case "MoveRightButton":
-                    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 80, RobotProtocol.DCMotorMode.Backward, 130);
-                    break;
-                case "MoveForwardButton":
-                    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 200, RobotProtocol.DCMotorMode.Forward, 165);
-                    break;
-                case "MoveBackwardButton":
-                    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 160, RobotProtocol.DCMotorMode.Backward, 165);
-                    break;
+                //case "MoveLeftButton":
+                //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 0, RobotProtocol.DCMotorMode.Forward, 150);
+                //    break;
+                //case "MoveRightButton":
+                //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 80, RobotProtocol.DCMotorMode.Backward, 130);
+                //    break;
+                //case "MoveForwardButton":
+                //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 200, RobotProtocol.DCMotorMode.Forward, 165);
+                //    break;
+                //case "MoveBackwardButton":
+                //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 160, RobotProtocol.DCMotorMode.Backward, 165);
+                //    break;
             }
             if (bSucceeded == false)
             {
@@ -496,10 +489,10 @@ namespace ProbeController
             switch(eventSource.Name)
             {
                 case "leftLEDButton":
-                    bSucceeded = await OrderToggleLED(RobotProtocol.LEDSide.Left);
+                    bSucceeded = await OrderToggleLEDAsync(RobotProtocol.LEDSide.Left);
                     break;
                 case "rightLEDButton":
-                    bSucceeded = await OrderToggleLED(RobotProtocol.LEDSide.Right);
+                    bSucceeded = await OrderToggleLEDAsync(RobotProtocol.LEDSide.Right);
                     break;
             }
             
