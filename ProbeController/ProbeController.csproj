@@ -101,7 +101,7 @@
     <Compile Include="GrabWindow.xaml.cs">
       <DependentUpon>GrabWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MainWindowPartial.cs" />
+    <Compile Include="MainWindowExtension.cs" />
     <Compile Include="Robot\RobotCommunicator.cs" />
     <Compile Include="Robot\RobotController\RobotControllerMain.cs" />
     <Compile Include="Robot\RobotController\RobotControllerExtension.cs" />
