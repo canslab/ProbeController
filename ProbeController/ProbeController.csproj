@@ -102,10 +102,9 @@
       <DependentUpon>GrabWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainWindowExtension.cs" />
-    <Compile Include="Robot\RobotCommunicator.cs" />
-    <Compile Include="Robot\RobotController\RobotControllerMain.cs" />
-    <Compile Include="Robot\RobotController\RobotControllerExtension.cs" />
-    <Compile Include="Robot\RobotProtocol.cs" />
+    <Compile Include="Robot\RobotController\RobotControllerConnection.cs" />
+    <Compile Include="Robot\RobotController\RobotControllerCommand.cs" />
+    <Compile Include="Robot\RobotController\RobotProtocol.cs" />
     <Page Include="GrabWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

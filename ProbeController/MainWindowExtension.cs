@@ -57,11 +57,10 @@ namespace ProbeController
             double horizontalServoTheta, verticalServoTheta;
 
             // fetch the value of 2 text boxes (horizontal servo theta value, vertical servo theta value)
-            if (double.TryParse(horizontalServoThetaText, out horizontalServoTheta) == true && double.TryParse(verticalServoThetaText, out verticalServoTheta))
+            if (double.TryParse(horizontalServoThetaText, out horizontalServoTheta) && double.TryParse(verticalServoThetaText, out verticalServoTheta))
             {
-                bSucceeded &= await mRobotController.RotateServoMotorsAsync(RobotProtocol.ServoMotorsSide.Horizontal, horizontalServoTheta);
-                bSucceeded &= await mRobotController.RotateServoMotorsAsync(RobotProtocol.ServoMotorsSide.Vertical, verticalServoTheta);
-
+                bSucceeded &= await mRobotController.RotateServoMotorsAsync(RobotProtocol.ServoMotorSide.Horizontal, horizontalServoTheta);
+                bSucceeded &= await mRobotController.RotateServoMotorsAsync(RobotProtocol.ServoMotorSide.Vertical, verticalServoTheta);
             }
             // when input values are not valid 
             else

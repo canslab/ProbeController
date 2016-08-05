@@ -4,8 +4,12 @@ using System.Windows;
 namespace ProbeController.Robot
 {
     // this partial class copes with command related methods
+    // This also contains the status of robot (such as LED status) 
     public partial class RobotController
     {
+        public readonly Vector FACEVECTOR = new Vector(0, 1);
+        protected enum MoveDirection { LEFT, RIGHT, STILL, UNDEF };
+
         /// <summary>
         /// Whether the left side LED is turned on or not 
         /// </summary>
@@ -15,42 +19,6 @@ namespace ProbeController.Robot
         /// Whether the right side LED is turned on or not 
         /// </summary>
         public bool IsRightLEDOn { get; private set; } = false;
-
-        public readonly Vector FACEVECTOR = new Vector(0, 1);
-        protected enum MoveDirection { LEFT, RIGHT, STILL, UNDEF };
-                
-        /// <summary>
-        /// Turn on Robot's LED
-        /// </summary>
-        /// <param name="side"> Left side or Right side</param>
-        /// <param name="bOn"> Turn on or not</param>
-        /// <returns> whether the command has been successfully submitted or not </returns>
-        public async Task<bool> TurnOnLEDAsync(RobotProtocol.LEDSide side, bool bOn)
-        {
-            bool bSucceeded = false;
-
-            // First of all, CanCommunicate should be true in order to send command 
-            if (CanCommunicate)
-            {
-                // retrieve LED json command
-                string madeJSONCommand = RobotProtocol.MakeLEDCommand(side, bOn);
-
-                // if made json command is invalid, bSucceeded must be assigned to false
-                if (madeJSONCommand == null)
-                {
-                    bSucceeded = false;
-                }
-                // otherwise, invoke SendJSONStringAsync()
-                else
-                {
-                    bSucceeded = await Communicator.SendJSONStringAsnyc(madeJSONCommand);
-                }
-
-            }
-            
-            // return whether this function works well or not
-            return bSucceeded;
-        }
 
         /// <summary>
         /// Toggle LED using TurnOnLED
@@ -86,10 +54,10 @@ namespace ProbeController.Robot
         /// <param name="side"> horizontal servo or vertical servo </param>
         /// <param name="theta"> the value of theta </param>
         /// <returns> whether this task succeeded or not </returns>
-        public async Task<bool> RotateServoMotorsAsync(RobotProtocol.ServoMotorsSide side, double theta)
+        public async Task<bool> RotateServoMotorsAsync(RobotProtocol.ServoMotorSide side, double theta)
         {
             bool bSucceeded = false;
-            int numDutyCycle = 0;
+            uint numDutyCycle = 0;
             string madeJSONCommand = null;
             
             // First of all, can we send a message by checking CanCommunicate property
@@ -99,7 +67,8 @@ namespace ProbeController.Robot
                 numDutyCycle = getDutyCycleWhenThetaIs(side, theta);
 
                 // make JSON command 
-                madeJSONCommand = RobotProtocol.MakeServoMotorsCommand(side, numDutyCycle);
+                madeJSONCommand = RobotProtocol.Command.CreateServoMotorCommand(side, numDutyCycle);
+
                 if (madeJSONCommand == null)
                 {
                     bSucceeded = false;
@@ -113,14 +82,47 @@ namespace ProbeController.Robot
         }
 
         /// <summary>
+        /// Turn on Robot's LED
+        /// </summary>
+        /// <param name="side"> Left side or Right side</param>
+        /// <param name="bOn"> Turn on or not</param>
+        /// <returns> whether the command has been successfully submitted or not </returns>
+        protected async Task<bool> TurnOnLEDAsync(RobotProtocol.LEDSide side, bool bOn)
+        {
+            bool bSucceeded = false;
+
+            // First of all, CanCommunicate should be true in order to send command 
+            if (CanCommunicate)
+            {
+                // retrieve LED json command
+                // CommandFactory.CreateLEDCommand()
+                string madeJSONCommand = RobotProtocol.Command.CreateLEDCommand(side, bOn);
+
+                // if made json command is invalid, bSucceeded must be assigned to false
+                if (madeJSONCommand == null)
+                {
+                    bSucceeded = false;
+                }
+                // otherwise, invoke SendJSONStringAsync()
+                else
+                {
+                    bSucceeded = await Communicator.SendJSONStringAsnyc(madeJSONCommand);
+                }
+            }
+            
+            // return whether this function works well or not
+            return bSucceeded;
+        }
+
+        /// <summary>
         /// Transforms theta to corresponding duty cycle
         /// </summary>
         /// <param name="side"> Which side do you want to get duty cycle </param>
         /// <param name="theta"> Theta value</param>
         /// <returns> Corresponding duty cycle </returns>
-        protected int getDutyCycleWhenThetaIs(RobotProtocol.ServoMotorsSide side ,double theta)
+        protected uint getDutyCycleWhenThetaIs(RobotProtocol.ServoMotorSide side ,double theta)
         {
-            return (int)((side == RobotProtocol.ServoMotorsSide.Horizontal) ? (-2 * theta + 451) : (-2.27 * theta + 309));
+            return (uint)((side == RobotProtocol.ServoMotorSide.Horizontal) ? (-2 * theta + 451) : (-2.27 * theta + 309));
         }
 
         public async Task<bool> FaceRobotUsingVector(Vector directionVector)

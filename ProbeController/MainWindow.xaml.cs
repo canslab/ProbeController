@@ -157,11 +157,11 @@ namespace ProbeController
             }
 
             //bool bConnectionSuccess = await mCommunicator.ConnectToURLAsync(ipTextBox.Text, int.Parse(portTextBox.Text));
-            bConnectionSucceded = await mRobotController.AddCommunicatorAsync(ipTextBox.Text, remoteRobotPortNumber);              
+            bConnectionSucceded = await mRobotController.ConnectAsync(ipTextBox.Text, remoteRobotPortNumber);              
 
             if (bConnectionSucceded == false)
             {
-                mRobotController.DetachCommunicatorAndCloseIt();
+                mRobotController.Disconnect();
                 MessageBox.Show("Robot Connection Failed, check your remote deivce");
             }
             else
@@ -172,7 +172,7 @@ namespace ProbeController
         }
         private void onDisconnectButton(object sender, RoutedEventArgs e)
         {
-            mRobotController.DetachCommunicatorAndCloseIt();
+            mRobotController.Disconnect();
             e.Handled = true;
 
             connectButton.IsEnabled = true;
@@ -397,7 +397,7 @@ namespace ProbeController
 
             if (mRobotController != null)
             {
-                bSucceeded = await mRobotController.RotateServoMotorsAsync(RobotProtocol.ServoMotorsSide.Horizontal, newTheta);
+                bSucceeded = await mRobotController.RotateServoMotorsAsync(RobotProtocol.ServoMotorSide.Horizontal, newTheta);
                 if (bSucceeded == true)
                 {
                     horizontalServoTextBox.Text = Convert.ToString(newTheta);
@@ -417,7 +417,7 @@ namespace ProbeController
 
             if (mRobotController != null)
             {
-                bSucceeded = await mRobotController.RotateServoMotorsAsync(RobotProtocol.ServoMotorsSide.Vertical, newTheta);
+                bSucceeded = await mRobotController.RotateServoMotorsAsync(RobotProtocol.ServoMotorSide.Vertical, newTheta);
                 if (bSucceeded == true)
                 {
                     verticalServoTextBox.Text = Convert.ToString(newTheta);
