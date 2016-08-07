@@ -102,7 +102,7 @@
       <DependentUpon>GrabWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainWindowExtension.cs" />
-    <Compile Include="Robot\RobotController\RobotControllerConnection.cs" />
+    <Compile Include="Robot\RobotController\RobotControllerNetwork.cs" />
     <Compile Include="Robot\RobotController\RobotControllerCommand.cs" />
     <Compile Include="Robot\RobotController\RobotProtocol.cs" />
     <Page Include="GrabWindow.xaml">

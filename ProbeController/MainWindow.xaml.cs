@@ -13,7 +13,6 @@ using JHStreamReceiver;
 using ProbeController.Robot;
 using Cv2 = OpenCvSharp;
 
-
 namespace ProbeController
 {
     public partial class MainWindow : Window
