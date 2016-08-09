@@ -51,24 +51,22 @@ namespace JHStreamReceiver
             WebRequest webRequest = WebRequest.Create(url);
             WebResponse webResponse = null;
 
-            // it can take some time..... 
-            webResponse = await webRequest.GetResponseAsync();
-            
-            if(webResponse == null)
+            try
             {
-                // WebException has occured because it can't connect to Ip camera
-                webResponse.Dispose();
-                webResponse = null;
-                webRequest = null;        
-                
-                // just return false
+                // it can take some time..
+                webResponse = await webRequest.GetResponseAsync();
+            }
+            catch(WebException ex)
+            {
+                // when connection has failed.. 
+                webRequest = null;
                 return false;
             }
 
             // get the stream from WebResponse
             Stream stream = webResponse.GetResponseStream();
             mReader = new BinaryReader(stream);
-            
+
             // connection success
             return true;
         }
@@ -101,7 +99,7 @@ namespace JHStreamReceiver
             getFrameBytes(out retByteArray);
             return retByteArray;
         }
-                
+
         /// <summary>
         /// Terminates this object 
         /// </summary>
@@ -128,10 +126,10 @@ namespace JHStreamReceiver
         {
             get
             {
-                if ( mReader != null && mReader.BaseStream != null)
+                if (mReader != null && mReader.BaseStream != null)
                 {
                     return true;
-                }            
+                }
                 else
                 {
                     return false;
@@ -149,7 +147,7 @@ namespace JHStreamReceiver
         /// It is a private method and invoked by GetFrameAsMat()
         /// </summary>
         /// <returns> output byte </returns>
-        private void getFrameBytes(out byte[] outputFrame) 
+        private void getFrameBytes(out byte[] outputFrame)
         {
             Debug.Assert(IsConnected == true);
             int startFlagLocation = -1;

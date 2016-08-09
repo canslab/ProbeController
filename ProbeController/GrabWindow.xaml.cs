@@ -2,9 +2,11 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 using ImageCv2 = OpenCvSharp;
 
 namespace ProbeController
@@ -17,16 +19,24 @@ namespace ProbeController
         private WriteableBitmap mWb;
         public ImageCv2.Mat EntireMat { get; }
         public ImageCv2.Mat CrappedMat { get; private set; }
-
-        private ImageCv2.Point mTargetOrigin;
-        private ImageCv2.Size mTargetSize;
-
-        public ImageCv2.Rect TargetROI
+        public ImageCv2.Rect SelectedROI
         {
             get
             {
-                Debug.Assert(mTargetOrigin != null && mTargetSize != null);
-                return new ImageCv2.Rect(mTargetOrigin, mTargetSize);
+                var selectedRegionX = (double)selectedRegion.GetValue(Canvas.LeftProperty);
+                var selectedRegionY = (double)selectedRegion.GetValue(Canvas.TopProperty);
+
+                if (selectedRegionX + selectedRegion.Width >= 640)
+                {
+                    selectedRegion.Width = 640 - selectedRegionX;
+                }
+                if (selectedRegionY + selectedRegion.Height >= 480)
+                {
+                    selectedRegion.Height = 480 - selectedRegionY;
+                }
+
+                return new ImageCv2.Rect((int)selectedRegionX, (int)selectedRegionY,
+                    (int)selectedRegion.Width, (int)selectedRegion.Height);
             }
         }
 
@@ -46,8 +56,10 @@ namespace ProbeController
             // set frame as grapped frame
             ImageCv2.Extensions.WriteableBitmapConverter.ToWriteableBitmap(EntireMat, mWb);
 
-            mTargetOrigin = new ImageCv2.Point(0, 0);
-            mTargetSize = new ImageCv2.Size(0, 0);
+            selectedRegion.Visibility = Visibility.Hidden;
+
+            confirmButton.IsEnabled = true;
+            saveButton.IsEnabled = false;
         }
         protected override void OnInitialized(EventArgs e)
         {
@@ -83,53 +95,59 @@ namespace ProbeController
             {
                 await Task.Factory.StartNew(() => { ImageCv2.Cv2.ImWrite(dlg.FileName, CrappedMat); });
                 MessageBox.Show("Save Complete!");
+                saveButton.IsEnabled = false;
             }
         }
-        private void onMouseUpAtFrame(object sender, MouseButtonEventArgs e)
+        
+        private void onMouseDownAtCanvas(object sender, MouseButtonEventArgs e)
         {
-            Debug.Assert(EntireMat != null);
-            var mouseUpPosition = e.GetPosition(sender as IInputElement);
-            var mouseUpX = (int)mouseUpPosition.X;
-            var mouseUpY = (int)mouseUpPosition.Y;
+            // mouse down means grapping has started! 
+            var mouseDownPosition = e.GetPosition(sender as IInputElement);
 
-            // calculate the Width and Height of snippet frame.
-            mTargetSize.Width = Math.Abs(mouseUpX - mTargetOrigin.X);
-            mTargetSize.Height = Math.Abs(mouseUpY - mTargetOrigin.Y);
+            selectedRegion.SetValue(Canvas.LeftProperty, mouseDownPosition.X);
+            selectedRegion.SetValue(Canvas.TopProperty, mouseDownPosition.Y);
 
-            // calculate the effective origin(top left corner point). 
-            if (mouseUpX <= mTargetOrigin.X)
+            selectedRegion.Width = 1;
+            selectedRegion.Height = 1;
+            selectedRegion.Visibility = Visibility.Visible;
+            selectedRegion.Stroke = Brushes.Yellow;
+
+            // Change UI
+            confirmButton.IsEnabled = true;
+            saveButton.IsEnabled = false;
+        }
+
+        private void onMouseMoveAtCanvas(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton != MouseButtonState.Pressed)
             {
-                mTargetOrigin.X = mouseUpX;
+                return;
             }
+            var currentMousePos = e.GetPosition(sender as IInputElement);
+            var currentMouseMoveX = (int)currentMousePos.X;
+            var currentMouseMoveY = (int)currentMousePos.Y;
 
-            if (mouseUpY <= mTargetOrigin.Y)
-            {
-                mTargetOrigin.Y = mouseUpY;
-            }
+            selectedRegion.Width = Math.Abs(currentMouseMoveX - SelectedROI.X);
+            selectedRegion.Height = Math.Abs(currentMouseMoveY - SelectedROI.Y);
 
             // update bottom dashboard
-            snippetOriginLabel.Content = string.Format("({0}, {1})", mTargetOrigin.X, mTargetOrigin.Y);
-            snippetSizeLabel.Content = string.Format("({0}, {1})", mTargetSize.Width, mTargetSize.Height);
+            snippetOriginLabel.Content = string.Format("({0}, {1})", SelectedROI.X, SelectedROI.Y);
+            snippetSizeLabel.Content = string.Format("({0}, {1})", SelectedROI.Width, SelectedROI.Height);
+        }
 
-            // when selected region is so small 
-            if (mTargetSize.Height <= 5 || mTargetSize.Width <= 5)
+        // when user pressed confirm button ==> selected region is used to make snippet image or tracking.
+        private void onConfirmButtonClicked(object sender, RoutedEventArgs e)
+        {
+            if (SelectedROI.Width <= 5 || SelectedROI.Height <= 5)
             {
                 MessageBox.Show("Selected Region is so small to prcoess any task.. Retry !", "Region is so small", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-            else
-            {
-                CrappedMat = EntireMat.SubMat(TargetROI);
-            }
-        }
-        private void onMouseDownAtFrame(object sender, MouseButtonEventArgs e)
-        {
-            var mouseDownPosition = e.GetPosition(sender as IInputElement);
-            var mouseDownX = (int)mouseDownPosition.X;
-            var mouseDownY = (int)mouseDownPosition.Y;
 
-            mTargetOrigin.X = mouseDownX;
-            mTargetOrigin.Y = mouseDownY;
+            CrappedMat = EntireMat.SubMat(SelectedROI);
+            confirmButton.IsEnabled = false;
+            saveButton.IsEnabled = true;
+            selectedRegion.Stroke = Brushes.Red;
         }
     }
 }
