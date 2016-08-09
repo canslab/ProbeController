@@ -5,24 +5,49 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ProbeController"
         mc:Ignorable="d"
-        Title="GrabWindow" Height="310" Width="477.857" ResizeMode="NoResize">
-    <Grid>
+        Title="GrabWindow" Height="650" Width="820" ResizeMode="NoResize">
+    <Grid Margin="0,0,0,8.2">
         <Grid.RowDefinitions>
-            <RowDefinition Height="40*"/>
-            <RowDefinition Height="40*"/>
-            <RowDefinition Height="40*"/>
-            <RowDefinition Height="40*"/>
-            <RowDefinition Height="40*"/>
+            <RowDefinition Height="70*"/>
+            <RowDefinition Height="70*"/>
+            <RowDefinition Height="70*"/>
+            <RowDefinition Height="70*"/>
+            <RowDefinition Height="70*"/>
+            <RowDefinition Height="70*"/>
+            <RowDefinition Height="70*"/>
+            <RowDefinition Height="70*"/>
+            <RowDefinition Height="80*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="320*"/>
-            <ColumnDefinition Width="100*"/>
+            <ColumnDefinition Width="6*"/>
+            <ColumnDefinition Width="1*"/>
         </Grid.ColumnDefinitions>
-        <GroupBox x:Name="groupBox" Grid.Column="0" Grid.Row="0" Grid.RowSpan="5" Header="Image Snippet" HorizontalAlignment="Center" Width="337" Height="263" VerticalAlignment="Top" Margin="0,0,0,0">
-            <Image x:Name="snippetFrame" Margin="0,0,0,0" Width="320" Height="240" />
+        <GroupBox x:Name="groupBox" Grid.Column="0" Grid.Row="0" Grid.RowSpan="8" Header="Image Snippet" HorizontalAlignment="Center" Width="670" Height="510" VerticalAlignment="Top" Margin="0,20,0,0" >
+            <Image x:Name="snippetFrame" Width="640" Height="480" MouseDown="onMouseDownAtFrame" MouseUp="onMouseUpAtFrame"/>
         </GroupBox>
-        <Button x:Name="confirmButton" Content="Confirm" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Width="90" Height="40" Margin="0,0,0,0" />
-        <Button x:Name="saveButton" Content="Save" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Width="90" Height="40" Margin="0,0,0,0" Click="onSaveButton" />
-        <Button x:Name="exitButton" Content="Exit" Grid.Row="4" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Width="90" Height="40" Margin="0,0,0,0" Click="onExitButton"/>
+
+        <GroupBox x:Name="BottomGroupBox" Header="Image Snippet Dashboard" HorizontalAlignment="Left" VerticalAlignment="Top" Width="600" Height="61"  Grid.Row="8" Margin="20,10,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="18*"/>
+                    <ColumnDefinition Width="42*"/>
+                    <ColumnDefinition Width="27*"/>
+                    <ColumnDefinition Width="109*"/>
+                    <ColumnDefinition Width="130*"/>
+                    <ColumnDefinition Width="130*"/>
+                    <ColumnDefinition Width="130*"/>
+                </Grid.ColumnDefinitions>
+
+                <Label Grid.Column="0" VerticalAlignment="Center" Width="Auto" Grid.ColumnSpan="3" Margin="0,6,0,6.8">Origin:</Label>
+                <Label x:Name="snippetOriginLabel" Grid.Column="2" VerticalAlignment="Center" Grid.ColumnSpan="3" Margin="26.2,6,130.2,6.8">(40, 30)</Label>
+                <Label Grid.Column="4" VerticalAlignment="Center" Margin="0.2,6,0.2,6.8">Width, Height:</Label>
+                <Label x:Name="snippetSizeLabel" Grid.Column="4" VerticalAlignment="Center" Grid.ColumnSpan="3" Margin="130.2,6,130.2,6.8">(300,200)</Label>
+                <Button x:Name="grapButton" Grid.Column="6" Margin="0.2,0,0.2,-0.2">Start Grab</Button>
+            </Grid>
+        </GroupBox>
+
+        <Button x:Name="confirmButton" Content="Confirm" Grid.Row="1" Width="90" Height="40" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" />
+        <Button x:Name="saveButton" Content="Save" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" Width="90" Height="40"  Click="onSaveButton" Grid.Column="1" />
+        <Button x:Name="exitButton" Content="Exit" Grid.Row="8" HorizontalAlignment="Center" VerticalAlignment="Center" Width="90" Height="40"  Click="onExitButton" Grid.Column="1" />
     </Grid>
 </Window>

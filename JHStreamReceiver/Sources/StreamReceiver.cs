@@ -1,4 +1,4 @@
-﻿using OpenCvSharp;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
@@ -45,27 +45,19 @@ namespace JHStreamReceiver
         /// <returns> Task </returns>
         public async Task<bool> ConnectToURLAsync(string url)
         {
-            if (IsConnected == true)
-            {
-                // if it is connected, first disconnect the current connection, 
-                // and newly connect to the ipcamera by using given url.
-                Disconnect();
-            }
+            Debug.Assert(IsConnected == false && url != null);
 
             // make web request. It's like a connection trial.
             WebRequest webRequest = WebRequest.Create(url);
-
-            // get the response from web request 
             WebResponse webResponse = null;
 
-            try
+            // it can take some time..... 
+            webResponse = await webRequest.GetResponseAsync();
+            
+            if(webResponse == null)
             {
-                // it can take some time..... 
-                webResponse = await webRequest.GetResponseAsync();
-            }
-            catch(WebException e)
-            {
-                // WebException has occured because it can't connect to Ip camera.
+                // WebException has occured because it can't connect to Ip camera
+                webResponse.Dispose();
                 webResponse = null;
                 webRequest = null;        
                 
@@ -75,46 +67,39 @@ namespace JHStreamReceiver
 
             // get the stream from WebResponse
             Stream stream = webResponse.GetResponseStream();
-            
-            // make binary reader using web stream
             mReader = new BinaryReader(stream);
-
+            
             // connection success
             return true;
         }
-    
+
         /// <summary>
-        /// Grab a Frame as a OpenCVSharp.Mat from the remote IP camera
-        /// 
+        /// Get Frame(byte array) asynchronously
         /// </summary>
-        /// <returns> A grabbed Frame </returns>
-        public async Task<Mat> GetFrameAsMatAsync()
+        /// <returns> Frame(byte array) </returns>
+        public async Task<byte[]> GetFrameAsByteArrayAsync()
         {
-            Mat returnMat = null;
-
-            // async job 
-            returnMat = await Task<Mat>.Factory.StartNew(() =>
+            Debug.Assert(IsConnected == true);
+            byte[] retByteArray = null;
+            retByteArray = await Task<byte[]>.Factory.StartNew(() =>
             {
-                byte[] resultFrameAsByteArray = null;
-                getFrameBytes(out resultFrameAsByteArray);
-
-                return Cv2.ImDecode(resultFrameAsByteArray, ImreadModes.Unchanged);
+                byte[] tempByteArray = null;
+                tempByteArray = GetFrameAsByteArray();
+                return tempByteArray;
             });
-
-            return returnMat;
+            return retByteArray;
         }
 
         /// <summary>
-        /// Grabs a frame as a BitmapFrame
-        /// </summary
-        public void GetFrameAsBitmapFrame(out BitmapFrame outputBitmapFrame)
+        /// Get Frame(byte array) synchronously
+        /// </summary>
+        /// <returns> Frame(byte array) </returns>
+        public byte[] GetFrameAsByteArray()
         {
-            byte[] recvFrameAsBytes = null;
-            getFrameBytes(out recvFrameAsBytes);
-            MemoryStream mMemoryStream = new MemoryStream(recvFrameAsBytes);
-            JpegBitmapDecoder mDecoder = new JpegBitmapDecoder(mMemoryStream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
-
-            outputBitmapFrame = mDecoder.Frames[0];
+            Debug.Assert(IsConnected == true);
+            byte[] retByteArray = null;
+            getFrameBytes(out retByteArray);
+            return retByteArray;
         }
                 
         /// <summary>
@@ -122,13 +107,14 @@ namespace JHStreamReceiver
         /// </summary>
         public void Disconnect()
         {
+            Debug.Assert(IsConnected == true);
             // clear all buffers
-            mBuffer.ClearContents();
-            mImageBuffer.ClearContents();
+            mBuffer.SetOffsetTo(0);
+            mImageBuffer.SetOffsetTo(0);
 
             // dispose BinaryReader 
-            mReader?.Dispose();
             mReader?.Close();
+            mReader?.Dispose();
             // make mReader null
             mReader = null;
         }
@@ -165,13 +151,15 @@ namespace JHStreamReceiver
         /// <returns> output byte </returns>
         private void getFrameBytes(out byte[] outputFrame) 
         {
+            Debug.Assert(IsConnected == true);
             int startFlagLocation = -1;
             int endFlagLocation = -1;
+            int receivedImageSizeInBytes = 0;
 
             while (true)
             {
                 // read the stream data from BinaryReader and save these data to mBuffer up to 100000(97KB)
-                mBuffer.AppendDataFromBinaryReader(mReader, 100000);
+                mBuffer.AppendDataFrom(mReader, 100000);
 
                 // find the start flag of JPEG Format
                 startFlagLocation = mBuffer.FindPattern(0, SOI);
@@ -187,11 +175,13 @@ namespace JHStreamReceiver
                 {
                     // Data Move:  mBuffer ---> mImageBuffer
                     // After that, mImageBuffer would be the output and used to make Mat or BitmapFrame
-                    mImageBuffer.Append(mBuffer.Buffer, startFlagLocation, endFlagLocation + 2 - startFlagLocation);
+                    receivedImageSizeInBytes = endFlagLocation - startFlagLocation + 2;
+                    mImageBuffer.Append(mBuffer.Buffer, startFlagLocation, receivedImageSizeInBytes);
 
-                    // clear the contents of mImageBuffer, mBuffer
-                    mImageBuffer.ClearContents();
-                    mBuffer.ClearContents();
+                    // set buffers to origin (set buffer's interal count variable to zero)
+                    // These will be used again to receive next call.
+                    mImageBuffer.SetOffsetTo(0);
+                    mBuffer.SetOffsetTo(0);
 
                     break;
                 }
@@ -203,25 +193,18 @@ namespace JHStreamReceiver
         /********************************************************************/
         /*******            Private CONSTANTS                           *****/
         /********************************************************************/
-        /// <summary>
-        /// soi means the start flags of JPEG Format
-        /// </summary>
+        // SOI = start flags of JPEG format 
+        // EOI = end flags of JPEG format
         private static byte[] SOI = { 0xff, 0xd8 };
-        /// <summary>
-        /// eoi means the end flags of JPEG Format
-        /// </summary>
         private static byte[] EOI = { 0xff, 0xd9 };
 
         /********************************************************************/
         /*******            Private variables                           *****/
         /********************************************************************/
-        /// <summary>
-        /// This buffer is used to receive data directly from BinaryReader
-        /// </summary>
+
+        // mBuffer is a buffer that received data directly from mReader
         private MemoryBuffer mBuffer;
-        /// <summary>
-        /// This buffer is used to make 
-        /// </summary>
+        // mImageBuffer is buffer that stores complete a single-jpeg binary data.
         private MemoryBuffer mImageBuffer;
         /// <summary>
         /// It is a stream that is used to receive data from the remote IP camera.

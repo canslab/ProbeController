@@ -1,12 +1,13 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
 namespace JHStreamReceiver
 {
     /// <summary>
-    /// It encapsulates memory buffer
-    /// It is very easy to use. 
+    /// It wraps memory buffer
+    /// It is so easy to use that user doesn't have to worr about details.
     /// </summary>
     class MemoryBuffer
     {
@@ -19,8 +20,9 @@ namespace JHStreamReceiver
         /// <param name="initialCapacity"> initial capacity in bytes</param>
         public MemoryBuffer(int initialCapacity)
         {
+            Debug.Assert(initialCapacity > 0);
             mBuffer = new byte[initialCapacity];
-            mCount = 0;
+            mBufferOffset = 0;
         }
         
         /********************************************************************/
@@ -33,12 +35,9 @@ namespace JHStreamReceiver
         /// <param name="reader"> BinaryReader that will be read up to (nSize) bytes</param>
         /// <param name="nSize"> total # of bytes to be read from BinaryReader and appended </param>
         /// <returns> If either reader is null or nSize is negative, it returns false </returns>
-        public bool AppendDataFromBinaryReader(BinaryReader reader, int nSize)
+        public void AppendDataFrom(BinaryReader reader, int nSize)
         {
-            if (reader == null || nSize < 0)
-            {
-                return false;
-            }
+            Debug.Assert(reader != null && nSize >=0 && reader.BaseStream.CanRead == true);
 
             int moreRequiredSize = nSize - RemainingSpace;
             if (moreRequiredSize > 0)
@@ -46,11 +45,10 @@ namespace JHStreamReceiver
                 Array.Resize(ref mBuffer, Capacity + moreRequiredSize);
             }
 
-            int readSize = reader.Read(mBuffer, mCount, nSize);
-            mCount += readSize;
-
-            return true;
+            int readSize = reader.Read(mBuffer, mBufferOffset, nSize);
+            mBufferOffset += readSize;
         }
+       
         /// <summary>
         /// It appends data from sourceBuffer(index starts from sourceBufferFromIndex) up to #(totalLength) bytes
         /// 
@@ -60,22 +58,24 @@ namespace JHStreamReceiver
         /// <param name="totalLength"> The total # of bytes to be appended </param>
         public void Append(byte[] sourceBuffer, int sourceBufferFromIndex, int totalLength)
         {
+            Debug.Assert(sourceBuffer != null && sourceBufferFromIndex >= 0);
             int moreRequiredSize = totalLength - RemainingSpace;
 
             if (moreRequiredSize > 0)
             {
                 Array.Resize(ref mBuffer, Capacity + moreRequiredSize);
             }
-            Array.Copy(sourceBuffer, sourceBufferFromIndex, mBuffer, mCount, totalLength);
-            mCount += totalLength;
+            Array.Copy(sourceBuffer, sourceBufferFromIndex, mBuffer, mBufferOffset, totalLength);
+            mBufferOffset += totalLength;
         }
+
         /// <summary>
-        /// This clears buffer, internally it doesn't mainpulate buffer directly, it just set count variable to 0
-        /// In the other words, this is shallow deletion..
+        /// Set Offset To offset parameter
         /// </summary>
-        public void ClearContents()
+        public void SetOffsetTo(int offset)
         {
-            mCount = 0;
+            Debug.Assert(offset >= 0);
+            mBufferOffset = offset;
         }
   
         /// <summary>
@@ -90,9 +90,10 @@ namespace JHStreamReceiver
         /// <returns> The found index of the pattern. If this function fails, it returns -1 </returns>
         public int FindPattern(int from, byte[] pattern)
         {
+            Debug.Assert(from >= 0 && pattern != null && pattern.Length > 0);
             int index = -1;
 
-            for (int i = from; i < mCount - 1; ++i)
+            for (int i = from; i < mBufferOffset - 1; ++i)
             {
                 if (mBuffer[i] == pattern[0])
                 {
@@ -124,17 +125,13 @@ namespace JHStreamReceiver
         /*******            Properties                                  *****/
         /********************************************************************/
         /// <summary>
-        /// It indicates how many bytes are in this buffer 
-        /// </summary>
-        public int Count { get { return mCount; } }
-        /// <summary>
         /// It indicates the total number of bytes this buffer can store.
         /// </summary>
         public int Capacity { get { return mBuffer.Length; } }
         /// <summary>
         /// It indicates the remaining space in bytes
         /// </summary>
-        public int RemainingSpace { get { return mBuffer.Length - mCount; } }
+        public int RemainingSpace { get { return mBuffer.Length - mBufferOffset; } }
         /// <summary>
         /// This is the internal buffer reference. 
         /// </summary>
@@ -144,6 +141,6 @@ namespace JHStreamReceiver
         /*******            Private variables                           *****/
         /********************************************************************/
         private byte[] mBuffer;
-        private int mCount;
+        private int mBufferOffset;
     }
 }

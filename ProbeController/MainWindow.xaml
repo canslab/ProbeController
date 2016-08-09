@@ -20,12 +20,13 @@
 
         <!-- Frame Panel: Image(frame), StartStream, EndStream, Blur, Canny Buttons....-->
         <StackPanel Margin="42,10,385.6,11.6" Orientation="Horizontal" Grid.Column="0" Grid.ColumnSpan="2">
-            <Image x:Name="frame" HorizontalAlignment="Left" Height="480" VerticalAlignment="Top" Width="640" MouseUp="onMouseUpAtFrame" MouseDown="onMouseDownAtFrame"/>
+            <Image x:Name="frame" HorizontalAlignment="Left" Height="480" VerticalAlignment="Top" Width="640" />
             <StackPanel x:Name="buttonFrame" HorizontalAlignment="Left" Height="Auto" VerticalAlignment="Top" MinWidth="100" Orientation="Vertical" Margin="10,0,0,0">
                 <Button x:Name="startStreamButton" Content="Start Stream" Click="onStartStreamButton" Margin="4" MinHeight="40" />
                 <Button x:Name="endStreamButton" Content="End Stream" Click="onEndStreamButton" Margin="4" MinHeight="40"/>
                 <Button x:Name="gblurButton" Content="Blur " Click="onGaussianBlurButton" Margin="4" MinHeight="40"/>
                 <Button x:Name="cannyButton" Content="Canny" Click="onCannyButton" Margin="4" MinHeight="40"/>
+                <Button x:Name="grapButton" Content="Grap" Click="onGrapButton" Margin="4" MinHeight="40"/>
             </StackPanel>
         </StackPanel>
 
@@ -115,24 +116,7 @@
         </GroupBox>
 
         <!-- Bottom Panel GroupBox-->
-        <GroupBox x:Name="BottomGroupBox" Header="Image Snippet Dashboard" HorizontalAlignment="Left" Width="480" Height="Auto" Margin="40,0,0,10"  Grid.Row="1" RenderTransformOrigin="0.5,0.5">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="20*"/>
-                    <ColumnDefinition Width="25*"/>
-                    <ColumnDefinition Width="30*"/>
-                    <ColumnDefinition Width="30*"/>
-                    <ColumnDefinition Width="30*"/>
-                </Grid.ColumnDefinitions>
-
-                <Label Grid.Column="0" VerticalAlignment="Center" Width="Auto">Origin:</Label>
-                <Label x:Name="snippetOriginLabel" Grid.Column="1" VerticalAlignment="Center">(40, 30)</Label>
-                <Label Grid.Column="2" VerticalAlignment="Center">Width, Height:</Label>
-                <Label x:Name="snippetSizeLabel" Grid.Column="3" VerticalAlignment="Center">(300,200)</Label>
-                <Button x:Name="grabSnippetButton" Grid.Column="4" Click="onGrabButton">Grab</Button>
-            </Grid>
-        </GroupBox>
-
+        
 
 
     </Grid>
