@@ -58,7 +58,7 @@ namespace ProbeController
         }
 
         /*******************************************************************/
-        /*********                  Event Handler                   ********/
+        /*********                  Streaming Feature               ********/
         /*******************************************************************/
         private async void onStartStreamButton(object sender, RoutedEventArgs e)
         {
@@ -88,7 +88,6 @@ namespace ProbeController
             startStreamButton.IsEnabled = true;
             endStreamButton.IsEnabled = false;
         }
-
         private void onEndStreamButton(object sender, RoutedEventArgs e)
         {
             e.Handled = true;
@@ -97,6 +96,11 @@ namespace ProbeController
             RealTimeStreamingWorker.CancelAsync();
             changeUIWhenStreamingEnd();
         }
+
+
+        /*******************************************************************/
+        /*********             Real Time Processing Feature         ********/
+        /*******************************************************************/
         private void onGaussianBlurButton(object sender, RoutedEventArgs e)
         {
             e.Handled = true;
@@ -105,6 +109,7 @@ namespace ProbeController
         {
             e.Handled = true;
         }
+
 
         private async void onConnectButton(object sender, RoutedEventArgs e)
         {
@@ -163,18 +168,19 @@ namespace ProbeController
                         bSucceeded = await OrderToggleLEDAsync(RobotProtocol.LEDSide.Right);
                         e.Handled = true;
                         break;
-                    //case Key.W:
-                    //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 200, RobotProtocol.DCMotorMode.Forward, 165);
-                    //    break;
-                    //case Key.A:
-                    //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 0, RobotProtocol.DCMotorMode.Forward, 150);
-                    //    break;
-                    //case Key.S:
-                    //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 160, RobotProtocol.DCMotorMode.Backward, 165);
-                    //    break;
-                    //case Key.D:
-                    //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 150, RobotProtocol.DCMotorMode.Forward, 0);
-                    //    break;
+                    case Key.W:
+
+                        //bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 200, RobotProtocol.DCMotorMode.Forward, 165);
+                        break;
+                    case Key.A:
+                        //bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 0, RobotProtocol.DCMotorMode.Forward, 150);
+                        break;
+                    case Key.S:
+                        //bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 160, RobotProtocol.DCMotorMode.Backward, 165);
+                        break;
+                    case Key.D:
+                        //bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 150, RobotProtocol.DCMotorMode.Forward, 0);
+                        break;
 
                     case Key.Left:
                         horinzontalServoSlider.Value -= 0.2;
@@ -203,7 +209,6 @@ namespace ProbeController
         /*       Grabbing Snippet Image Event Handlers (Drag Feature)         */
         /*                                                                    */
         /**********************************************************************/
-        
         private void onGrapButton(object sender, RoutedEventArgs e)
         {
             // Modal Window

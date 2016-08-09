@@ -51,6 +51,7 @@
 
         <Button x:Name="confirmButton" Content="Confirm" Grid.Row="1" Width="90" Height="40" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Click="onConfirmButtonClicked"/>
         <Button x:Name="saveButton" Content="Save" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" Width="90" Height="40"  Click="onSaveButton" Grid.Column="1" />
+        <Button x:Name="trackStartButton" Content="Track Start" Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center" Width="90" Height="40"  Click="onSaveButton" Grid.Column="1" />
         <Button x:Name="exitButton" Content="Exit" Grid.Row="8" HorizontalAlignment="Center" VerticalAlignment="Center" Width="90" Height="40"  Click="onExitButton" Grid.Column="1" />
     </Grid>
 </Window>

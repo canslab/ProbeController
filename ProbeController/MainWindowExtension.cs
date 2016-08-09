@@ -112,5 +112,13 @@ namespace ProbeController
 
             return bSucceeded;
         }
+
+        private async Task<bool> OrderDCMotorMove()
+        {
+            bool bSucceeded = true;
+
+            return bSucceeded;
+
+        }
     }
 }
