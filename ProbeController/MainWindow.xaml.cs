@@ -38,7 +38,7 @@ namespace ProbeController
             RealTimeStreamingWorker.WorkerSupportsCancellation = true;
             RealTimeStreamingWorker.DoWork += RealTimeStreamWorkerRoutine;
             
-            streamDoneEvent = new System.Threading.AutoResetEvent(false);
+            streamHasFinishedEvent = new System.Threading.AutoResetEvent(false);
 
             frame.Stretch = Stretch.None;   
             frame.Source = mWb;
@@ -214,7 +214,7 @@ namespace ProbeController
             RealTimeStreamingWorker.CancelAsync();
 
             // wait until RealTimeStreamingWorker has finished..
-            streamDoneEvent.WaitOne();
+            streamHasFinishedEvent.WaitOne();
 
             // if there exists an grapped mat
             if (mGrappedFrameMat != null)

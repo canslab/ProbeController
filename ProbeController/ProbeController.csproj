@@ -6,7 +6,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{CCC2AF47-AD61-4315-A3D5-7B7F4BF3264D}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ProbeController</RootNamespace>
     <AssemblyName>ProbeController</AssemblyName>
@@ -102,6 +102,8 @@
       <DependentUpon>GrabWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ImageProcessing\ImageProcessingUnit.cs" />
+    <Compile Include="ImageProcessing\ObjectTracker.cs" />
+    <Compile Include="ImageProcessing\ObjectTrackerExtension.cs" />
     <Compile Include="MainWindowExtension.cs" />
     <Compile Include="Robot\RobotControllerNetwork.cs" />
     <Compile Include="Robot\RobotControllerCommand.cs" />

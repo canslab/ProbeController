@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using OpenCvSharp;
 using System.Diagnostics;
 
-namespace ProbeController
+namespace ImageProcessing
 {
     /// <summary>
     /// It does all kinds of image processing task.
@@ -50,24 +50,6 @@ namespace ProbeController
             result.Frame = Cv2.ImDecode(frameAsByteArray, ImreadModes.Unchanged);
             result.CompletedWell = true;
 
-            return result;
-        }
-
-        public static async Task<IPUResult> TrackObject(byte[] targetAsByteArray)
-        {
-            Debug.Assert(targetAsByteArray != null && targetAsByteArray.Length > 0);
-
-            IPUResult result = null;
-
-            //byte[] currentFrame = null;
-            //Mat currentFrameMat = null;
-            //result = new IPUResult();
-
-            //// Get Current Frame 
-            //currentFrame = await Streamer.GetFrameAsByteArray();
-            //currentFrameMat = Cv2.ImDecode(currentFrame, ImreadModes.Unchanged);
-                
-            // Get Position Vector originated from center position.
             return result;
         }
     }

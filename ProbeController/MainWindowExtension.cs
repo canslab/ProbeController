@@ -4,9 +4,9 @@ using ProbeController.Robot;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Media.Imaging;
 using System.ComponentModel;
 using System.Threading;
+using ImageProcessing;
 
 namespace ProbeController
 {
@@ -20,7 +20,7 @@ namespace ProbeController
 
         private BackgroundWorker RealTimeStreamingWorker { get; }
 
-        private AutoResetEvent streamDoneEvent { get; }
+        private AutoResetEvent streamHasFinishedEvent { get; }
 
         private async Task<bool> connectToStreamerAsync(string streamURL, StreamReceiver receiver)
         {
@@ -39,26 +39,25 @@ namespace ProbeController
             while(true)
             {
                 var frameAsByteArray = receiver.GetFrameAsByteArray();
-                using (ipuResult = ImageProcessingUnit.ConvertToMat(frameAsByteArray))
+                using(var currentFrameMat = ImageCV2.Cv2.ImDecode(frameAsByteArray, ImageCV2.ImreadModes.Unchanged))
                 {
                     // User requests this thread to be terminated, so grab the last image 
                     // in order to user to capture the last moment.
                     if (thisWorker.CancellationPending == true)
                     {
-                        // DO NOT SET e.Cancelled = true, because this case is not exceptional case(== normal termination)
                         // save last frame because user orders grab command
                         // deep copy.. because ipuResult would be released (using keyword)
                         e.Cancel = true;
 
-                        mGrappedFrameMat = ipuResult.Frame.Clone();
+                        mGrappedFrameMat = currentFrameMat.Clone();
                         mStreamReceiver.Disconnect();
-                        streamDoneEvent.Set();
+                        streamHasFinishedEvent.Set();
                         break;
                     }
                     else
                     {
                         // only can UI Thread change UI contents
-                        // So call Invoke method of Dispatcher
+                        // So call Invoke method of Dispatcher, that method will be run on UI thread
                         Dispatcher.Invoke(() =>
                         {
                             ImageCV2.Extensions.WriteableBitmapConverter.ToWriteableBitmap(ipuResult.Frame, mWb);
