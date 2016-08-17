@@ -45,21 +45,23 @@ namespace ProbeController
             Debug.Assert(deliveredGrappedMat != null);
             InitializeComponent();
 
+            // MainWindow로부터 받아온 Mat을 EntireMat에 보관
             EntireMat = deliveredGrappedMat;
-            CrappedMat = EntireMat;
+            //CrappedMat = EntireMat;
             mWb = new WriteableBitmap(EntireMat.Width, EntireMat.Height, 96, 96, PixelFormats.Bgr24, null);
 
             // set properties of frame(image)
             snippetFrame.Source = mWb;
             snippetFrame.Stretch = Stretch.None;
 
-            // set frame as grapped frame
+            // 얻어온 프레임을 표시
             ImageCv2.Extensions.WriteableBitmapConverter.ToWriteableBitmap(EntireMat, mWb);
 
             selectedRegion.Visibility = Visibility.Hidden;
 
             confirmButton.IsEnabled = true;
             saveButton.IsEnabled = false;
+            startTrackingButton.IsEnabled = false;
         }
         protected override void OnInitialized(EventArgs e)
         {
@@ -144,10 +146,17 @@ namespace ProbeController
                 return;
             }
 
+            // 선택된 ROI로 전체프레임을 Crap해서 저장한다.
             CrappedMat = EntireMat.SubMat(SelectedROI);
             confirmButton.IsEnabled = false;
             saveButton.IsEnabled = true;
+            startTrackingButton.IsEnabled = true;
             selectedRegion.Stroke = Brushes.Red;
+        }
+
+        private void onStartTrackingButtonClicked(object sender, RoutedEventArgs e)
+        {
+            
         }
     }
 }
