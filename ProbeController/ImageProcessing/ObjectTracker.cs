@@ -15,7 +15,7 @@ namespace ImageProcessing
     /// </summary>
     public partial class ObjectTracker : IDisposable
     {
-        private static Rangef[] hsRanges = { new Rangef(0, 180), new Rangef(0, 256) };
+        public static Rangef[] hsRanges = { new Rangef(0, 180), new Rangef(0, 256) };
 
         private Rect mTrackingWindow;
         private Mat mModelHistogram;
@@ -23,6 +23,17 @@ namespace ImageProcessing
 
         private bool mBModelHistogramReady;
         private bool mBInitialSettingReady;
+
+        /// <summary>
+        /// 정확도에 관련된 변수, 크면 클수록 정확해 지지만, 연산량이 증가한다.
+        /// 디폴트로 10이 설정되어 있다.
+        /// </summary>
+        public int MaxIterationCount { get; set; }
+        /// <summary>
+        /// 정확도에 관련된 변수, Epsilon이 작을수록 정확도가 높아진다, 하지만 연산량이 증가한다.
+        /// 디폴트로 1이 설정되어 있다.
+        /// </summary>
+        public double Epsilon { get; set; }
 
         ////////////////////////////////////////// singleton related methods
         static ObjectTracker()
@@ -35,8 +46,10 @@ namespace ImageProcessing
         /// </summary>
         public static ObjectTracker Instance { get; }
 
-        ////////////////////////////////////////// Properties 
-        private bool IsReadyToTrack
+        /// <summary>
+        /// 현재 트렉킹할 준비가 되어 있는가? 
+        /// </summary>
+        public bool IsReadyToTrack
         {
             get
             {
@@ -53,6 +66,9 @@ namespace ImageProcessing
 
             mBModelHistogramReady = false;
             mBInitialSettingReady = false;
+
+            MaxIterationCount = 10;
+            Epsilon = 1;
         }
         ~ObjectTracker()
         {
@@ -131,6 +147,16 @@ namespace ImageProcessing
         }
 
         /// <summary>
+        /// 초기 트랙킹 윈도우의 값을 설정하는데, OpenCVSharp.Rect로 설정한다
+        /// </summary>
+        /// <param name="roiRect">관심영역</param>
+        public void SetInitialTrackingWindowProperties(OpenCvSharp.Rect roiRect)
+        {
+            Debug.Assert(mTrackingWindow != null);
+            SetInitialTrackingWindowProperties(roiRect.X, roiRect.Y, roiRect.Width, roiRect.Height);
+        }
+
+        /// <summary>
         /// 현재 프레임(OpenCVSharp.Mat)을 받아서, 트랙킹 작업을 수행한다.
         /// 주의: 이 함수가 호출되기 전에, 반드시 모델 이미지 설정과 초기 윈도우 위치, 크기등을 설정해야한다.
         /// </summary>
@@ -149,7 +175,7 @@ namespace ImageProcessing
                 Cv2.CalcBackProject(new Mat[] { hsvCurrentFrameMat }, new int[] { 0, 1 }, mModelHistogram, mBackProjectionMat, hsRanges);
             }
 
-            Cv2.MeanShift(mBackProjectionMat, ref mTrackingWindow, TermCriteria.Both(20, 10));
+            Cv2.MeanShift(mBackProjectionMat, ref mTrackingWindow, TermCriteria.Both(MaxIterationCount, Epsilon));
             Cv2.Rectangle(currentFrameMat, mTrackingWindow, 255, 3);
 
             // 결과를 IPUResult 구조체에 저장, 리턴될 예정
@@ -186,22 +212,6 @@ namespace ImageProcessing
             }
 
             return retResult;
-        }
-        public void Dispose()
-        {
-            releaseUnmanagedResources();
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// 내부 리소스들을 모두 해제한다.
-        /// </summary>
-        protected void releaseUnmanagedResources()
-        {
-            Debug.Assert(mModelHistogram != null && mBackProjectionMat != null);
-            //Debug.Assert(mModelHistogram.IsDisposed == false && mBackProjectionMat.IsDisposed == false);
-            mModelHistogram.Release();
-            mBackProjectionMat.Release();
         }
 
         /// <summary>

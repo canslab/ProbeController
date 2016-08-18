@@ -25,7 +25,7 @@
         <GroupBox x:Name="imageSnippetGroupBox" Grid.Column="0" Grid.Row="0" Grid.RowSpan="8" Header="Image Snippet" HorizontalAlignment="Center" Width="670" Height="510" VerticalAlignment="Top" Margin="0,20,0,0" >
             <Canvas x:Name="imageFrameCanvas" Width="640" Height="480" HorizontalAlignment="Center" VerticalAlignment="Center" MouseMove="onMouseMoveAtCanvas" MouseDown="onMouseDownAtCanvas">
                 <Image x:Name="snippetFrame" Width="640" Height="480" Margin="0,0,0,0" Canvas.Left="-1"/>
-                <Rectangle x:Name="selectedRegion" Canvas.Left="10" Canvas.Top="20" StrokeThickness="2" Stroke="Yellow" Width="100" Height="100"/>
+                <Rectangle x:Name="selectedRegion" Canvas.Left="10" Canvas.Top="20" StrokeThickness="2" Stroke="Yellow" Width="4" Height="4"/>
             </Canvas>
         </GroupBox>
 
@@ -51,7 +51,7 @@
 
         <Button x:Name="confirmButton" Content="Confirm" Grid.Row="1" Width="90" Height="40" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Click="onConfirmButtonClicked"/>
         <Button x:Name="saveButton" Content="Save" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" Width="90" Height="40"  Click="onSaveButton" Grid.Column="1" />
-        <Button x:Name="startTrackingButton" Content="Track Start" Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center" Width="90" Height="40"  Click="onStartTrackingButtonClicked"  Grid.Column="1" />
+        <Button x:Name="readyTrackingButton" Content="Ready Tracking" Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center" Width="90" Height="40"  Click="onReadyTrackingButton"  Grid.Column="1" />
         <Button x:Name="exitButton" Content="Exit" Grid.Row="8" HorizontalAlignment="Center" VerticalAlignment="Center" Width="90" Height="40"  Click="onExitButton" Grid.Column="1" />
     </Grid>
 </Window>

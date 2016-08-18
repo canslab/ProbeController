@@ -13,6 +13,7 @@ using JHStreamReceiver;
 using ProbeController.Robot;
 using ImageCV2 = OpenCvSharp;
 using System.Diagnostics;
+using ImageProcessing;
 
 namespace ProbeController
 {
@@ -21,9 +22,18 @@ namespace ProbeController
         private WriteableBitmap mWb;
         private StreamReceiver mStreamReceiver;     // Stream Receiver
         private RobotController mRobotController;   // Robot Controller
+        private ImageCV2.Mat mGrappedMat;
+
+        private ObjectTracker Tracker
+        {
+            get;
+        }
 
         // user defined frame snippet (subset of a frame)
-        private ImageCV2.Mat mGrappedFrameMat;
+        public GrabWindow.GrabWindowResult GrapWindowResult
+        {
+            get; set;
+        }
 
         private readonly string STREAM_URL = "http://devjhlab.iptime.org:8080/?action=stream";
 
@@ -37,10 +47,10 @@ namespace ProbeController
             RealTimeStreamingWorker = new System.ComponentModel.BackgroundWorker();
             RealTimeStreamingWorker.WorkerSupportsCancellation = true;
             RealTimeStreamingWorker.DoWork += RealTimeStreamWorkerRoutine;
-            
+
             streamHasFinishedEvent = new System.Threading.AutoResetEvent(false);
 
-            frame.Stretch = Stretch.None;   
+            frame.Stretch = Stretch.None;
             frame.Source = mWb;
 
             endStreamButton.IsEnabled = false;
@@ -49,6 +59,9 @@ namespace ProbeController
 
             verticalServoTextBox.Text = "0";
             horizontalServoTextBox.Text = "0";
+
+            startTrackingButton.IsEnabled = false;
+            Tracker = ObjectTracker.Instance;
         }
 
         protected override void OnInitialized(EventArgs e)
@@ -92,7 +105,7 @@ namespace ProbeController
         private void onEndStreamButton(object sender, RoutedEventArgs e)
         {
             e.Handled = true;
-    
+
             // Cancel streaming task.
             RealTimeStreamingWorker.CancelAsync();
             changeUIWhenStreamingEnd();
@@ -119,18 +132,16 @@ namespace ProbeController
             {
                 remoteRobotPortNumber = int.Parse(portTextBox.Text);
             }
-            catch(Exception argException)
+            catch (Exception argException)
             {
                 MessageBox.Show("Robot Connection Failed due to input info is not valid... RSN> " + argException.Message);
                 return;
             }
 
-            //bool bConnectionSuccess = await mCommunicator.ConnectToURLAsync(ipTextBox.Text, int.Parse(portTextBox.Text));
-            bConnectionSucceded = await mRobotController.ConnectAsync(ipTextBox.Text, remoteRobotPortNumber);              
+            bConnectionSucceded = await mRobotController.ConnectAsync(ipTextBox.Text, remoteRobotPortNumber);
 
             if (bConnectionSucceded == false)
             {
-                mRobotController.Disconnect();
                 MessageBox.Show("Robot Connection Failed, check your remote deivce");
             }
             else
@@ -188,7 +199,7 @@ namespace ProbeController
                     case Key.Down:
                         verticalServoSlider.Value -= 0.2;
                         break;
-                    
+
                 }
 
                 if (bSucceeded == false)
@@ -203,7 +214,7 @@ namespace ProbeController
         /*       Grabbing Snippet Image Event Handlers (Drag Feature)         */
         /*                                                                    */
         /**********************************************************************/
-        
+
         private void onGrapButton(object sender, RoutedEventArgs e)
         {
             // Modal Window
@@ -216,16 +227,18 @@ namespace ProbeController
             // wait until RealTimeStreamingWorker has finished..
             streamHasFinishedEvent.WaitOne();
 
-            // if there exists an grapped mat
-            if (mGrappedFrameMat != null)
-            {
-                // initialize GrabWindow by using grapped matrix(it should be cloned)
-                grabWindow = new GrabWindow(mGrappedFrameMat);
-                grabWindow.Owner = this;
-                
-                // show dialog
-                grabWindow.ShowDialog();
-            }
+            // 마지막 프레임을 얻어와서 mGrappedMat에 저장되어 있다.
+            grabWindow = new GrabWindow(mGrappedMat);
+            grabWindow.Owner = this;
+            grabWindow.ShowDialog();
+            Console.WriteLine("Grap Window 닫힘!");
+
+            mGrappedMat.Release();
+            mGrappedMat = null;
+            
+            // GrapWindow의 결과를 저장한다. 쓰고 나서 반드시 Dispose해줘야 한다.
+            GrapWindowResult = grabWindow.Result;
+            startTrackingButton.IsEnabled = true;
 
             // restart streaming
             onStartStreamButton(sender, e);
@@ -240,7 +253,7 @@ namespace ProbeController
         {
             bool bSucceeded = await OrderRotateServoMotorsUsingTextBoxesAsync(horizontalServoTextBox.Text, verticalServoTextBox.Text);
 
-            if(bSucceeded == false)
+            if (bSucceeded == false)
             {
                 MessageBox.Show("Rotate Servo Motor Command has failed..");
             }
@@ -313,7 +326,7 @@ namespace ProbeController
             bool bSucceeded = false;
             e.Handled = true;
 
-            switch(eventSource.Name)
+            switch (eventSource.Name)
             {
                 // DC Motor Related Buttons
                 //case "MoveLeftButton":
@@ -349,7 +362,7 @@ namespace ProbeController
             e.Handled = true;
 
             // identify the name of the source that raised event  
-            switch(eventSource.Name)
+            switch (eventSource.Name)
             {
                 case "leftLEDButton":
                     bSucceeded = await OrderToggleLEDAsync(RobotProtocol.LEDSide.Left);
@@ -358,12 +371,27 @@ namespace ProbeController
                     bSucceeded = await OrderToggleLEDAsync(RobotProtocol.LEDSide.Right);
                     break;
             }
-            
+
             // When toggling LED task has failed, show user a messagebox
             if (bSucceeded == false)
             {
                 MessageBox.Show("LED Command failed!!!");
             }
+        }
+
+        private void onStartTrackingButtonClicked(object sender, RoutedEventArgs e)
+        {
+            // 여기서 이제 GrappedMat을 가지고 Tracking 작업을 수행해야 한다.
+            // Tracker의 값들을 설정한다. 
+            Tracker.SetModelImageAsMat(GrapWindowResult.ROIFrame, new int[] { 0, 255 }, new int[] { 0, 1 }, new int[] { 180, 256 }, ObjectTracker.hsRanges);
+            Tracker.SetInitialTrackingWindowProperties(GrapWindowResult.ROIRect);
+            Tracker.MaxIterationCount = 10;
+            Tracker.Epsilon = 1;
+        }
+
+        private void onPauseTrackingButtonClicked(object sender, RoutedEventArgs e)
+        {
+            
         }
     }
 }

@@ -27,6 +27,8 @@
                 <Button x:Name="gblurButton" Content="Blur " Click="onGaussianBlurButton" Margin="4" MinHeight="40"/>
                 <Button x:Name="cannyButton" Content="Canny" Click="onCannyButton" Margin="4" MinHeight="40"/>
                 <Button x:Name="grapButton" Content="Grap" Click="onGrapButton" Margin="4" MinHeight="40"/>
+                <Button x:Name="startTrackingButton" Content="Start Track" Click="onStartTrackingButtonClicked"  Margin="4" MinHeight="40"/>
+                <Button x:Name="pauseTrackingButton" Content="Pause Track" Click="onPauseTrackingButtonClicked"  Margin="4" MinHeight="40"/>
             </StackPanel>
         </StackPanel>
 

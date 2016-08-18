@@ -34,24 +34,27 @@ namespace ProbeController
 
             BackgroundWorker thisWorker = sender as BackgroundWorker;
             StreamReceiver receiver = e.Argument as StreamReceiver;
-            ImageProcessingUnit.IPUResult ipuResult = null;
 
-            while(true)
+            while (true)
             {
                 var frameAsByteArray = receiver.GetFrameAsByteArray();
-                using(var currentFrameMat = ImageCV2.Cv2.ImDecode(frameAsByteArray, ImageCV2.ImreadModes.Unchanged))
+                using (var currentFrameMat = ImageCV2.Cv2.ImDecode(frameAsByteArray, ImageCV2.ImreadModes.Unchanged))
                 {
                     // User requests this thread to be terminated, so grab the last image 
                     // in order to user to capture the last moment.
                     if (thisWorker.CancellationPending == true)
                     {
-                        // save last frame because user orders grab command
-                        // deep copy.. because ipuResult would be released (using keyword)
+                        // 이 if문에서는 마지막 프레임을 캡쳐하는 기능을 수행한다.
                         e.Cancel = true;
 
-                        mGrappedFrameMat = currentFrameMat.Clone();
+                        // currentFrameMat이 곧 소멸될 것이므로 Clone해둔다. 
+                        mGrappedMat = currentFrameMat.Clone();
                         mStreamReceiver.Disconnect();
+
+                        // UI Thread에게, 현재프레임이 캡쳐됐으니, 이후 기능을 수행하라고 일러준다. 
                         streamHasFinishedEvent.Set();
+
+                        // 그리고 이 async background thread는 종료한다.
                         break;
                     }
                     else
@@ -60,7 +63,17 @@ namespace ProbeController
                         // So call Invoke method of Dispatcher, that method will be run on UI thread
                         Dispatcher.Invoke(() =>
                         {
-                            ImageCV2.Extensions.WriteableBitmapConverter.ToWriteableBitmap(ipuResult.Frame, mWb);
+                            if(Tracker.IsReadyToTrack == true)
+                            {
+                                using (var trackingResult = Tracker.DoTrackUsing(currentFrameMat))
+                                {
+                                    ImageCV2.Extensions.WriteableBitmapConverter.ToWriteableBitmap(trackingResult.Frame, mWb);
+                                }
+                            }
+                            else
+                            {
+                                ImageCV2.Extensions.WriteableBitmapConverter.ToWriteableBitmap(currentFrameMat, mWb);
+                            }
                         });
                     }
                 }
@@ -74,7 +87,7 @@ namespace ProbeController
         {
             bool bSucceeded = false;
 
-            if(mRobotController != null)
+            if (mRobotController != null)
             {
                 bSucceeded = await mRobotController.ToggleLEDAsync(side);
             }
@@ -82,10 +95,10 @@ namespace ProbeController
             {
                 bSucceeded = false;
             }
-            
+
             return bSucceeded;
         }
-        
+
         /// <summary>
         /// Common Function to rotate servo motors using 2 text boxes(2 theta text boxes)
         /// </summary>

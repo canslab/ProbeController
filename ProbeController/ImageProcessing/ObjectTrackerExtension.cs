@@ -33,5 +33,22 @@ namespace ImageProcessing
                 GC.SuppressFinalize(this);
             }
         }
+        public void Dispose()
+        {
+            releaseUnmanagedResources();
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// 내부 리소스들을 모두 해제한다.
+        /// </summary>
+        protected void releaseUnmanagedResources()
+        {
+            Debug.Assert(mModelHistogram != null && mBackProjectionMat != null);
+            //Debug.Assert(mModelHistogram.IsDisposed == false && mBackProjectionMat.IsDisposed == false);
+            mModelHistogram.Release();
+            mBackProjectionMat.Release();
+        }
+
     }
 }
