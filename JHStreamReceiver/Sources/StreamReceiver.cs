@@ -2,7 +2,6 @@
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
-using System.Windows.Media.Imaging;
 
 namespace JHStreamReceiver
 {
@@ -144,7 +143,6 @@ namespace JHStreamReceiver
         /// Get a frame as byte[], and it is synchronous method.
         /// So if you call this method, you can be stucked.
         /// 
-        /// It is a private method and invoked by GetFrameAsMat()
         /// </summary>
         /// <returns> output byte </returns>
         private void getFrameBytes(out byte[] outputFrame)

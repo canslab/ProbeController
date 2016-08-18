@@ -101,13 +101,13 @@
     <Compile Include="GrabWindow.xaml.cs">
       <DependentUpon>GrabWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ImageProcessing\ImageProcessingUnit.cs" />
     <Compile Include="ImageProcessing\ObjectTracker.cs" />
     <Compile Include="ImageProcessing\ObjectTrackerExtension.cs" />
     <Compile Include="MainWindowExtension.cs" />
     <Compile Include="Robot\RobotControllerNetwork.cs" />
     <Compile Include="Robot\RobotControllerCommand.cs" />
     <Compile Include="Robot\RobotProtocol.cs" />
+    <Compile Include="ImageProcessing\StreamWorker.cs" />
     <Page Include="GrabWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

@@ -9,10 +9,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using JHStreamReceiver;
 using ProbeController.Robot;
-using ImageCV2 = OpenCvSharp;
-using System.Diagnostics;
 using ImageProcessing;
 
 namespace ProbeController
@@ -20,16 +17,12 @@ namespace ProbeController
     public partial class MainWindow : Window
     {
         private WriteableBitmap mWb;
-        private StreamReceiver mStreamReceiver;     // Stream Receiver
         private RobotController mRobotController;   // Robot Controller
-        private ImageCV2.Mat mGrappedMat;
-
         private ObjectTracker Tracker
         {
             get;
         }
 
-        // user defined frame snippet (subset of a frame)
         public GrabWindow.GrabWindowResult GrapWindowResult
         {
             get; set;
@@ -41,17 +34,11 @@ namespace ProbeController
         {
             InitializeComponent();
             mWb = new WriteableBitmap(FRAME_WIDTH, FRAME_HEIGHT, FRAME_DPI_X, FRAME_DPI_Y, PixelFormats.Bgr24, null);
-            mStreamReceiver = new StreamReceiver();
-
-            // initialization of background worker
-            RealTimeStreamingWorker = new System.ComponentModel.BackgroundWorker();
-            RealTimeStreamingWorker.WorkerSupportsCancellation = true;
-            RealTimeStreamingWorker.DoWork += RealTimeStreamWorkerRoutine;
-
-            streamHasFinishedEvent = new System.Threading.AutoResetEvent(false);
 
             frame.Stretch = Stretch.None;
             frame.Source = mWb;
+
+            RealTimeStreamingWorker = new StreamWorker(STREAM_URL, mWb);
 
             endStreamButton.IsEnabled = false;
             disconnectButton.IsEnabled = false;
@@ -75,18 +62,20 @@ namespace ProbeController
         /*******************************************************************/
         private async void onStartStreamButton(object sender, RoutedEventArgs e)
         {
-            Debug.Assert(RealTimeStreamingWorker.IsBusy == false);
             bool bSucceeded = false;
             e.Handled = true;
 
-            bSucceeded = await connectToStreamerAsync(STREAM_URL, mStreamReceiver);
-            if (bSucceeded == false)
+            if (RealTimeStreamingWorker.Connected == false)
             {
-                MessageBox.Show("streaming connection has failed..", "Streaming Connection Failure", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
+                bSucceeded = await RealTimeStreamingWorker.MakeConnectionAsync();
+                if (bSucceeded == false)
+                {
+                    MessageBox.Show("streaming connection has failed..", "Streaming Connection Failure", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
             }
 
-            RealTimeStreamingWorker.RunWorkerAsync(mStreamReceiver);
+            RealTimeStreamingWorker.RunStreamingConcurrently();
             changeUIWhenStreamingOK();
         }
         private void changeUIWhenStreamingOK()
@@ -102,12 +91,11 @@ namespace ProbeController
             endStreamButton.IsEnabled = false;
         }
 
-        private void onEndStreamButton(object sender, RoutedEventArgs e)
+        private async void onEndStreamButton(object sender, RoutedEventArgs e)
         {
             e.Handled = true;
 
-            // Cancel streaming task.
-            RealTimeStreamingWorker.CancelAsync();
+            await RealTimeStreamingWorker.StopStreamingTaskAndWait();
             changeUIWhenStreamingEnd();
         }
         private void onGaussianBlurButton(object sender, RoutedEventArgs e)
@@ -215,33 +203,25 @@ namespace ProbeController
         /*                                                                    */
         /**********************************************************************/
 
-        private void onGrapButton(object sender, RoutedEventArgs e)
+        private async void onGrapButton(object sender, RoutedEventArgs e)
         {
             // Modal Window
             GrabWindow grabWindow = null;
             e.Handled = true;
 
-            // Cancel Streaming Task
-            RealTimeStreamingWorker.CancelAsync();
+            using (var capturedFrameMat = await RealTimeStreamingWorker.CaptureFrameAsync())
+            {
+                // 마지막 프레임을 얻어와서 mGrappedMat에 저장되어 있다.
+                grabWindow = new GrabWindow(capturedFrameMat);
+                grabWindow.Owner = this;
+                grabWindow.ShowDialog();
 
-            // wait until RealTimeStreamingWorker has finished..
-            streamHasFinishedEvent.WaitOne();
+                Console.WriteLine("Grap Window 닫힘!");
+                GrapWindowResult = grabWindow.Result;
+            }
 
-            // 마지막 프레임을 얻어와서 mGrappedMat에 저장되어 있다.
-            grabWindow = new GrabWindow(mGrappedMat);
-            grabWindow.Owner = this;
-            grabWindow.ShowDialog();
-            Console.WriteLine("Grap Window 닫힘!");
-
-            mGrappedMat.Release();
-            mGrappedMat = null;
-            
             // GrapWindow의 결과를 저장한다. 쓰고 나서 반드시 Dispose해줘야 한다.
-            GrapWindowResult = grabWindow.Result;
             startTrackingButton.IsEnabled = true;
-
-            // restart streaming
-            onStartStreamButton(sender, e);
         }
 
         /**********************************************************************/
@@ -276,17 +256,21 @@ namespace ProbeController
         }
         private async void onHorizontalServoSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
+            // 최대 각 = 60도, 최소각 = -60도, 수평 시야각 = 120도
             const int MAX_HORIZONTAL_SERVO_THETA = 60;
             bool bSucceeded = false;
-            double newTheta = 12 * e.NewValue - MAX_HORIZONTAL_SERVO_THETA;
+
+            // slider의 바뀐 value(0 ~ 10)을 가지고서, servo motor의 각도를 계산한다.
+            double theta = 12 * e.NewValue - MAX_HORIZONTAL_SERVO_THETA;
+
             e.Handled = true;
 
             if (mRobotController != null)
             {
-                bSucceeded = await mRobotController.RotateServoMotorsAsync(RobotProtocol.ServoMotorSide.Horizontal, newTheta);
+                bSucceeded = await mRobotController.RotateServoMotorsAsync(RobotProtocol.ServoMotorSide.Horizontal, theta);
                 if (bSucceeded == true)
                 {
-                    horizontalServoTextBox.Text = Convert.ToString(newTheta);
+                    horizontalServoTextBox.Text = Convert.ToString(theta);
                 }
                 else
                 {
@@ -387,11 +371,13 @@ namespace ProbeController
             Tracker.SetInitialTrackingWindowProperties(GrapWindowResult.ROIRect);
             Tracker.MaxIterationCount = 10;
             Tracker.Epsilon = 1;
+
+            RealTimeStreamingWorker.ChangeToTrackingMode(Tracker);
         }
 
         private void onPauseTrackingButtonClicked(object sender, RoutedEventArgs e)
         {
-            
+            RealTimeStreamingWorker.ChangeToNormalMode();
         }
     }
 }

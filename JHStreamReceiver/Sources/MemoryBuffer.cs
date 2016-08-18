@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace JHStreamReceiver
 {
@@ -24,7 +23,7 @@ namespace JHStreamReceiver
             mBuffer = new byte[initialCapacity];
             mBufferOffset = 0;
         }
-        
+
         /********************************************************************/
         /*******            Public Methods                              *****/
         /********************************************************************/
@@ -37,7 +36,7 @@ namespace JHStreamReceiver
         /// <returns> If either reader is null or nSize is negative, it returns false </returns>
         public void AppendDataFrom(BinaryReader reader, int nSize)
         {
-            Debug.Assert(reader != null && nSize >=0 && reader.BaseStream.CanRead == true);
+            Debug.Assert(reader != null && nSize >= 0 && reader.BaseStream.CanRead == true);
 
             int moreRequiredSize = nSize - RemainingSpace;
             if (moreRequiredSize > 0)
@@ -48,7 +47,7 @@ namespace JHStreamReceiver
             int readSize = reader.Read(mBuffer, mBufferOffset, nSize);
             mBufferOffset += readSize;
         }
-       
+
         /// <summary>
         /// It appends data from sourceBuffer(index starts from sourceBufferFromIndex) up to #(totalLength) bytes
         /// 
@@ -77,7 +76,7 @@ namespace JHStreamReceiver
             Debug.Assert(offset >= 0);
             mBufferOffset = offset;
         }
-  
+
         /// <summary>
         /// It finds given pattern within this buffer
         /// 
@@ -127,15 +126,33 @@ namespace JHStreamReceiver
         /// <summary>
         /// It indicates the total number of bytes this buffer can store.
         /// </summary>
-        public int Capacity { get { return mBuffer.Length; } }
+        public int Capacity
+        {
+            get
+            {
+                return mBuffer.Length;
+            }
+        }
         /// <summary>
         /// It indicates the remaining space in bytes
         /// </summary>
-        public int RemainingSpace { get { return mBuffer.Length - mBufferOffset; } }
+        public int RemainingSpace
+        {
+            get
+            {
+                return mBuffer.Length - mBufferOffset;
+            }
+        }
         /// <summary>
         /// This is the internal buffer reference. 
         /// </summary>
-        public byte[] Buffer { get { return mBuffer; } }
+        public byte[] Buffer
+        {
+            get
+            {
+                return mBuffer;
+            }
+        }
 
         /********************************************************************/
         /*******            Private variables                           *****/
