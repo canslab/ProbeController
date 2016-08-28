@@ -10,6 +10,9 @@ namespace ProbeController.Robot
         public readonly Vector FACEVECTOR = new Vector(0, 1);
         protected enum MoveDirection { LEFT, RIGHT, STILL, UNDEF };
 
+        public double CurrentHorizontalDegress { get; private set; }
+        public double CurrentVerticalDegrees { get; private set; }
+
         /// <summary>
         /// Whether the left side LED is turned on or not 
         /// </summary>
@@ -76,6 +79,17 @@ namespace ProbeController.Robot
                 else
                 {
                     bSucceeded = await Communicator.SendJSONStringAsnyc(madeJSONCommand);
+                    if (bSucceeded == true)
+                    {
+                        if (side == RobotProtocol.ServoMotorSide.Horizontal)
+                        {
+                            CurrentHorizontalDegress = theta;
+                        }
+                        else if(side == RobotProtocol.ServoMotorSide.Vertical)
+                        {
+                            CurrentVerticalDegrees = theta;
+                        }
+                    }
                 }
             }
             return bSucceeded;

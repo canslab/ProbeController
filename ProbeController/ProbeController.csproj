@@ -39,7 +39,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -101,8 +101,6 @@
     <Compile Include="GrabWindow.xaml.cs">
       <DependentUpon>GrabWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ImageProcessing\ObjectTracker.cs" />
-    <Compile Include="ImageProcessing\ObjectTrackerExtension.cs" />
     <Compile Include="MainWindowExtension.cs" />
     <Compile Include="Robot\RobotControllerNetwork.cs" />
     <Compile Include="Robot\RobotControllerCommand.cs" />
@@ -159,6 +157,10 @@
     <ProjectReference Include="..\JHStreamReceiver\JHStreamReceiver.csproj">
       <Project>{77c521ca-74a6-4284-ac24-35f9024e447b}</Project>
       <Name>JHStreamReceiver</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Tracker\Tracker.csproj">
+      <Project>{3ee91966-c492-47fa-8f23-09a0e6a2f173}</Project>
+      <Name>Tracker</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

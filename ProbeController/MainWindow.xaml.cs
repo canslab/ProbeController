@@ -11,6 +11,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ProbeController.Robot;
 using ImageProcessing;
+using Tracker;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace ProbeController
 {
@@ -22,6 +25,7 @@ namespace ProbeController
         {
             get;
         }
+        private Timer TrackingTimer { get; set; } = null;
 
         public GrabWindow.GrabWindowResult GrapWindowResult
         {
@@ -367,16 +371,62 @@ namespace ProbeController
         {
             // 여기서 이제 GrappedMat을 가지고 Tracking 작업을 수행해야 한다.
             // Tracker의 값들을 설정한다. 
-            Tracker.SetModelImageAsMat(GrapWindowResult.ROIFrame, new int[] { 0, 255 }, new int[] { 0, 1 }, new int[] { 180, 256 }, ObjectTracker.hsRanges);
-            Tracker.SetInitialTrackingWindowProperties(GrapWindowResult.ROIRect);
-            Tracker.MaxIterationCount = 10;
-            Tracker.Epsilon = 1;
+            Tracker.SetEntireArea(FRAME_WIDTH, FRAME_HEIGHT);
+            //Tracker.SetModelImage(GrapWindowResult.ROIFrame, new int[] { 0, 1 }, 2, new int[] { 30, 16 }, ObjectTracker.HueSatColorRanges);
+            Tracker.SetModelImage(GrapWindowResult.ROIFrame, new int[] { 0 }, 1, new int[] { 30 }, ObjectTracker.HueColorRanges);
 
-            RealTimeStreamingWorker.ChangeToTrackingMode(Tracker);
+            // 일정 구간마다 실행될 timer 등록( 500ms 마다 트랙킹모드로 전환 )
+            TrackingTimer = new Timer((state) =>
+            {
+                // 트랙킹 모드로 전환..
+                RealTimeStreamingWorker.ChangeToTrackingMode(Tracker, OnReceivedTrackingResult);
+                Console.WriteLine("타이머 루틴실행!");
+            }, null, 500, 500);
         }
+
+        // 트랙킹된 결과를 이곳에서 받는다.  반드시 UI THread에서 실행되면 안된다.
+        public async Task OnReceivedTrackingResult(int centerX, int centerY, bool IsExistTarget, double stdev, AutoResetEvent trackingSynchronizer)
+        {
+            // trackingSynchronizer에 set을 하기전까지는, streaming이 진행되지 않는다.
+            if (IsExistTarget == true)
+            {
+                Console.WriteLine("x = {0}, y = {1} stdev = {2}", centerX, centerY, stdev);
+                var offsetX = centerX - 320;
+                var offsetY = 240 - centerY;
+
+                double hThetaRadians = Math.Atan2(offsetX, 512);
+                var hDiffDegress = Math.Floor(hThetaRadians * (180.0 / Math.PI));
+
+                double vThetaRadians = Math.Atan2(offsetY * Math.Cos(hThetaRadians), 512);
+                var vDiffDegress = -Math.Floor(vThetaRadians * (180.0 / Math.PI));
+
+                Console.WriteLine("vtheta = {0}, hTheta = {1}", vDiffDegress, hDiffDegress);
+
+                if (Math.Abs(hDiffDegress) >= 2)
+                {
+                    var hFianlDegrees = mRobotController.CurrentHorizontalDegress + hDiffDegress;
+                    await mRobotController.RotateServoMotorsAsync(RobotProtocol.ServoMotorSide.Horizontal, hFianlDegrees);
+                }
+                if (Math.Abs(vDiffDegress) >= 2)
+                {
+                    var vFianlDegrees = mRobotController.CurrentVerticalDegrees + vDiffDegress;
+                    await mRobotController.RotateServoMotorsAsync(RobotProtocol.ServoMotorSide.Vertical, vFianlDegrees);
+                }
+                //Thread.Sleep(100);
+            }
+            else
+            {
+                Console.WriteLine(" No Target stdev={0}", stdev);
+            }
+
+            RealTimeStreamingWorker.ChangeToNormalMode();
+            trackingSynchronizer.Set();
+        }
+
 
         private void onPauseTrackingButtonClicked(object sender, RoutedEventArgs e)
         {
+            TrackingTimer.Dispose();
             RealTimeStreamingWorker.ChangeToNormalMode();
         }
     }

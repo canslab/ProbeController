@@ -4,11 +4,18 @@ using System.Windows.Media.Imaging;
 using System.Diagnostics;
 using OpenCvSharp;
 using ImageProcessing;
+using Tracker;
+using System.Threading;
 
 namespace ImageProcessing
 {
     public class StreamWorker
     {
+        // 콜백 델리게이트
+        public delegate Task OnReceiveTrackingResult(int centerX, int centerY, bool bExistTarget, double stdev, AutoResetEvent trackingSynchronizer);
+
+        public OnReceiveTrackingResult TrackingAfterCallback { get; private set; }
+
         public enum Mode { NORMAL, TRACKING }
 
         public StreamWorker(string _url, WriteableBitmap _wb)
@@ -19,11 +26,9 @@ namespace ImageProcessing
             RemoteURL = _url;
             Wb = _wb;
             StreamingMode = Mode.NORMAL;
+            TrackingAfterCallback = null;
         }
 
-        /// <summary>
-        /// remote Device에 접속.
-        /// </summary>
         public async Task<bool> MakeConnectionAsync()
         {
             Debug.Assert(Receiver != null && Receiver.IsConnected == false);
@@ -100,25 +105,26 @@ namespace ImageProcessing
 
             return bStreamingCompleted;
         }
+
         /// <summary>
         /// 스트리밍 모드를 트랙킹 모드로 변경한다.
         /// </summary>
         /// <param name="_tracker"> 트랙커를 등록한다. </param>
-        public void ChangeToTrackingMode(ObjectTracker _tracker)
+        public void ChangeToTrackingMode(ObjectTracker _tracker, OnReceiveTrackingResult trackingAfterCallback)
         {
-            Debug.Assert(_tracker != null && _tracker.IsReadyToTrack == true);
+            Debug.Assert(_tracker != null && _tracker.IsTrackingReady == true);
             Tracker = _tracker;
             StreamingMode = Mode.TRACKING;
+            TrackingAfterCallback = trackingAfterCallback;
         }
+
         public void ChangeToNormalMode()
         {
             // release resources if any
             StreamingMode = Mode.NORMAL;
         }
 
-        /// <summary>
-        /// 이 함수는 AsyncStreamingTask에 의해 수행되는 Callback 함수입니다.
-        /// </summary>
+        // 이 함수는 다른 thread(non ui thread)에서 수행되는 함수입니다.
         private void StreamingTaskCallBack()
         {
             while (true)
@@ -133,27 +139,33 @@ namespace ImageProcessing
                 var frameAsByteArray = Receiver.GetFrameAsByteArray();
                 using (var currentFrameMat = Cv2.ImDecode(frameAsByteArray, ImreadModes.Unchanged))
                 {
-                    if (StreamingMode == Mode.NORMAL)
+                    Mat drawMat = currentFrameMat;
+
+                    if (StreamingMode == Mode.TRACKING)
                     {
-                        Wb.Dispatcher.Invoke(() =>
-                        {
-                            OpenCvSharp.Extensions.WriteableBitmapConverter.ToWriteableBitmap(currentFrameMat, Wb);
-                        });
+                        // 트랙킹한다
+                        var trackResult = Tracker.TrackUsing(currentFrameMat, 50, 320, 240);
+                        Cv2.Rectangle(drawMat, trackResult.Region, 255, 3);
+
+                        // 유저가 트랙킹 결과를 받고 일을 할 수 있도록 콜백함수를 호출해준다.
+                        TrackingAfterCallback(trackResult.CenterX, trackResult.CenterY, trackResult.IsObjectExist, trackResult.RegionStdev, TrackingSynchronizer);
+#if MY_DEBUG
+                        drawMat = trackResult.BackprojectFrame;
+#endif
+                        // 콜백함수가 완전히 종료될 때까지 기다린다.
+                        TrackingSynchronizer.WaitOne();
                     }
-                    else if (StreamingMode == Mode.TRACKING)
+
+                    Wb.Dispatcher.Invoke(() =>
                     {
-                        using (var trackingResult = Tracker.DoTrackUsing(currentFrameMat))
-                        {
-                            Wb.Dispatcher.Invoke(() =>
-                            {
-                                OpenCvSharp.Extensions.WriteableBitmapConverter.ToWriteableBitmap(trackingResult.Frame, Wb);
-                            });
-                        }
-                    }
+                        //OpenCvSharp.Extensions.WriteableBitmapConverter.ToWriteableBitmap(currentFrameMat, Wb);
+                        OpenCvSharp.Extensions.WriteableBitmapConverter.ToWriteableBitmap(drawMat, Wb);
+                    });
                 }
             }
         }
 
+        public AutoResetEvent TrackingSynchronizer { get; private set; } = new AutoResetEvent(false);
         public string RemoteURL { get; private set; }
         public bool IsNowStreaming
         {
