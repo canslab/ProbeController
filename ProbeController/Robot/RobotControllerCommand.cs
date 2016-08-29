@@ -7,7 +7,6 @@ namespace ProbeController.Robot
     // This also contains the status of robot (such as LED status) 
     public partial class RobotController
     {
-        public readonly Vector FACEVECTOR = new Vector(0, 1);
         protected enum MoveDirection { LEFT, RIGHT, STILL, UNDEF };
 
         public double CurrentHorizontalDegress { get; private set; }
@@ -137,56 +136,6 @@ namespace ProbeController.Robot
         protected uint getDutyCycleWhenThetaIs(RobotProtocol.ServoMotorSide side ,double theta)
         {
             return (uint)((side == RobotProtocol.ServoMotorSide.Horizontal) ? (-2 * theta + 451) : (-2.27 * theta + 309));
-        }
-
-        public async Task<bool> FaceRobotUsingVector(Vector directionVector)
-        {
-            // dot product between FACEVECTOR(0,1) and directionVector to get theta value
-            // also the sign of theta indicates the direction to which this robot should go
-            // ex) theta > 0 --> left
-            // ex) theta < 0 --> right
-            // ex) theta = 0 --> still
-            double theta = Vector.AngleBetween(FACEVECTOR, directionVector);
-
-            // when theta is greater than 0, it means go to the left direction
-            if (theta > 0)
-            {
-                
-            }
-            // it means go to the right direction
-            // 14 times , (forward,70, backward,130) --> about 90 degrees
-            // 7 times , (forward 70 backward 130) --> about 45 degrees
-            else if(theta < 0)
-            {
-
-            }
-            // when theta is 0, stay still
-            else
-            {
-                
-            }
-
-            return true;
-        }
-        protected MoveDirection getDirectionBasedOnVector(Vector targetVector)
-        {
-            MoveDirection retDirection = MoveDirection.UNDEF;
-
-            // when targetVector is toward up right to the origin
-            if (targetVector.X == 0 && targetVector.Y >= 0)
-            {
-                retDirection = MoveDirection.STILL;
-            }
-            else if (targetVector.X >= 0)
-            {
-                retDirection = MoveDirection.RIGHT;
-            }
-            else
-            {
-                retDirection = MoveDirection.LEFT;
-            }
-
-            return retDirection;
         }
     }
 }
