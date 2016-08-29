@@ -7,7 +7,7 @@ namespace ProbeController.Robot
     // This also contains the status of robot (such as LED status) 
     public partial class RobotController
     {
-        protected enum MoveDirection { LEFT, RIGHT, STILL, UNDEF };
+        public enum MoveDirection { FORWARD, LEFT, BACKWARD, RIGHT, UNDEF };
 
         public double CurrentHorizontalDegress { get; private set; }
         public double CurrentVerticalDegrees { get; private set; }
@@ -48,6 +48,41 @@ namespace ProbeController.Robot
             return bSucceeded;
         }
         
+        public async Task<bool> OperateDCMotor(MoveDirection direction)
+        {
+            bool bSucceeded = false;
+
+            if (CanCommunicateWithRobot)
+            {
+                //string madeJSONCommand = RobotProtocol.Command.CreateDCMotorCommand(RobotProtocol.DCMotorMode.)
+                string madeJSONCommand = null;
+                switch (direction)
+                {
+                    case MoveDirection.LEFT:
+                        madeJSONCommand = RobotProtocol.Command.CreateDCMotorCommand(RobotProtocol.DCMotorMode.Forward, 0, RobotProtocol.DCMotorMode.Forward, 150);
+                        break;
+                    case MoveDirection.RIGHT:
+                        madeJSONCommand = RobotProtocol.Command.CreateDCMotorCommand(RobotProtocol.DCMotorMode.Forward, 150, RobotProtocol.DCMotorMode.Forward, 0);
+                        break;
+                    case MoveDirection.FORWARD:
+                        madeJSONCommand = RobotProtocol.Command.CreateDCMotorCommand(RobotProtocol.DCMotorMode.Forward, 200, RobotProtocol.DCMotorMode.Forward, 165);
+                        break;
+                    case MoveDirection.BACKWARD:
+                        madeJSONCommand = RobotProtocol.Command.CreateDCMotorCommand(RobotProtocol.DCMotorMode.Backward, 160, RobotProtocol.DCMotorMode.Backward, 165);
+                        break;
+                }
+                if (madeJSONCommand == null)
+                {
+                    bSucceeded = false;
+                }
+                else
+                {
+                    bSucceeded = await Communicator.SendJSONStringAsnyc(madeJSONCommand);
+                }
+            }
+            return bSucceeded;
+        }
+
         /// <summary>
         /// Rotate Servo Motor which is specified by the first argument
         /// and how much it'll roate by is given by the second argument
@@ -63,7 +98,7 @@ namespace ProbeController.Robot
             string madeJSONCommand = null;
             
             // First of all, can we send a message by checking CanCommunicate property
-            if (CanCommunicate)
+            if (CanCommunicateWithRobot)
             {
                 // get duty cycle that corresponds to the given theta 
                 numDutyCycle = getDutyCycleWhenThetaIs(side, theta);
@@ -104,26 +139,18 @@ namespace ProbeController.Robot
         {
             bool bSucceeded = false;
 
-            // First of all, CanCommunicate should be true in order to send command 
-            if (CanCommunicate)
+            if (CanCommunicateWithRobot)
             {
-                // retrieve LED json command
-                // CommandFactory.CreateLEDCommand()
                 string madeJSONCommand = RobotProtocol.Command.CreateLEDCommand(side, bOn);
-
-                // if made json command is invalid, bSucceeded must be assigned to false
                 if (madeJSONCommand == null)
                 {
                     bSucceeded = false;
                 }
-                // otherwise, invoke SendJSONStringAsync()
                 else
                 {
                     bSucceeded = await Communicator.SendJSONStringAsnyc(madeJSONCommand);
                 }
             }
-            
-            // return whether this function works well or not
             return bSucceeded;
         }
 

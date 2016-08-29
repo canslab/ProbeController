@@ -176,7 +176,7 @@ namespace ProbeController.Robot
         /// <summary>
         /// Whether this controller has valid(communicatable) communicator or not
         /// </summary>
-        public bool CanCommunicate
+        public bool CanCommunicateWithRobot
         {
             get
             {

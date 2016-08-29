@@ -152,7 +152,7 @@ namespace ProbeController
 
         private async void onMainWindowKeyDown(object sender, KeyEventArgs e)
         {
-            if (mRobotController.CanCommunicate)
+            if (mRobotController.CanCommunicateWithRobot)
             {
                 bool bSucceeded = true;
                 switch (e.Key)
@@ -165,18 +165,19 @@ namespace ProbeController
                         bSucceeded = await OrderToggleLEDAsync(RobotProtocol.LEDSide.Right);
                         e.Handled = true;
                         break;
-                    //case Key.W:
-                    //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 200, RobotProtocol.DCMotorMode.Forward, 165);
-                    //    break;
-                    //case Key.A:
-                    //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 0, RobotProtocol.DCMotorMode.Forward, 150);
-                    //    break;
-                    //case Key.S:
-                    //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 160, RobotProtocol.DCMotorMode.Backward, 165);
-                    //    break;
-                    //case Key.D:
-                    //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 150, RobotProtocol.DCMotorMode.Forward, 0);
-                    //    break;
+
+                    case Key.A:
+                        bSucceeded = await mRobotController.OperateDCMotor(RobotController.MoveDirection.LEFT);
+                        break;
+                    case Key.D:
+                        bSucceeded = await mRobotController.OperateDCMotor(RobotController.MoveDirection.RIGHT);
+                        break;
+                    case Key.W:
+                        bSucceeded = await mRobotController.OperateDCMotor(RobotController.MoveDirection.FORWARD);
+                        break;
+                    case Key.S:
+                        bSucceeded = await mRobotController.OperateDCMotor(RobotController.MoveDirection.BACKWARD);
+                        break;
 
                     case Key.Left:
                         horinzontalServoSlider.Value -= 0.2;
@@ -316,18 +317,18 @@ namespace ProbeController
             switch (eventSource.Name)
             {
                 // DC Motor Related Buttons
-                //case "MoveLeftButton":
-                //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 0, RobotProtocol.DCMotorMode.Forward, 150);
-                //    break;
-                //case "MoveRightButton":
-                //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 80, RobotProtocol.DCMotorMode.Backward, 130);
-                //    break;
-                //case "MoveForwardButton":
-                //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Forward, 200, RobotProtocol.DCMotorMode.Forward, 165);
-                //    break;
-                //case "MoveBackwardButton":
-                //    bSucceeded = await mCommunicator.IssueDCMotorCommandAsync(RobotProtocol.DCMotorMode.Backward, 160, RobotProtocol.DCMotorMode.Backward, 165);
-                //    break;
+                case "MoveLeftButton":
+                    bSucceeded = await mRobotController.OperateDCMotor(RobotController.MoveDirection.LEFT);
+                    break;
+                case "MoveRightButton":
+                    bSucceeded = await mRobotController.OperateDCMotor(RobotController.MoveDirection.RIGHT);
+                    break;
+                case "MoveForwardButton":
+                    bSucceeded = await mRobotController.OperateDCMotor(RobotController.MoveDirection.FORWARD);
+                    break;
+                case "MoveBackwardButton":
+                    bSucceeded = await mRobotController.OperateDCMotor(RobotController.MoveDirection.BACKWARD);
+                    break;
             }
             if (bSucceeded == false)
             {
