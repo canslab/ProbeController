@@ -374,7 +374,7 @@ namespace ProbeController
             // 여기서 이제 GrappedMat을 가지고 Tracking 작업을 수행해야 한다.
             // Tracker의 값들을 설정한다. 
             Tracker.SetEntireArea(FRAME_WIDTH, FRAME_HEIGHT);
-            Tracker.SetModelImage(GrapWindowResult.ROIFrame, new int[] { 0, 1 }, 2, new int[] { 30, 2 }, ObjectTracker.HueSatColorRanges);
+            Tracker.SetModelImage(GrapWindowResult.ROIFrame, new int[] { 0, 1 }, 2, new int[] { 30, 4 }, ObjectTracker.HueSatColorRanges);
             //Tracker.SetModelImage(GrapWindowResult.ROIFrame, new int[] { 0 }, 1, new int[] { 30 }, ObjectTracker.HueColorRanges);
 
             // 일정 구간마다 실행될 timer 등록( 500ms 마다 트랙킹모드로 전환 )
@@ -382,7 +382,9 @@ namespace ProbeController
             {
                 // 트랙킹 모드로 전환..
                 RealTimeStreamingWorker.ChangeToTrackingMode(Tracker, OnReceivedTrackingResult);
-                Console.WriteLine("타이머 루틴실행!");
+#if MY_DEBUG
+                Console.WritekLine("타이머 루틴실행!");
+#endif
             }, null, 500, 500);
 
             // 

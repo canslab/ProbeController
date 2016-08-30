@@ -114,7 +114,9 @@ namespace ProbeController
             // trackingSynchronizer에 set을 하기전까지는, streaming이 진행되지 않는다.
             if (IsExistTarget == true)
             {
+#if MY_DEBUG
                 Console.WriteLine("x = {0}, y = {1} stdev = {2}", centerX, centerY, stdev);
+#endif
                 var offsetX = centerX - 320;
                 var offsetY = 240 - centerY;
 
@@ -123,8 +125,9 @@ namespace ProbeController
 
                 double vThetaRadians = Math.Atan2(offsetY * Math.Cos(hThetaRadians), 512);
                 var vDiffDegress = -Math.Floor(vThetaRadians * (180.0 / Math.PI));
-
+#if MY_DEBUG
                 Console.WriteLine("vtheta = {0}, hTheta = {1}", vDiffDegress, hDiffDegress);
+#endif
 
                 if (Math.Abs(hDiffDegress) >= 2)
                 {
@@ -152,9 +155,10 @@ namespace ProbeController
                 {
                     // 물체가 존재하지 않으므로 탐색을 수행해야 합니다.
                     // 수직각도는 0도로..
-
+#if MY_DEBUG
                     Console.WriteLine(" 탐색 모드로 전환!");
                     Console.WriteLine(" No Target stdev={0}", stdev);
+#endif
 
                     await mRobotController.RotateServoMotorsAsync(RobotProtocol.ServoMotorSide.Vertical, SearchOrder[SearchIndex].vTheta);
                     await mRobotController.RotateServoMotorsAsync(RobotProtocol.ServoMotorSide.Horizontal, SearchOrder[SearchIndex].hTheta);

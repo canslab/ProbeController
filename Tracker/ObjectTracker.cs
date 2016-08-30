@@ -222,13 +222,17 @@ namespace Tracker
             if (stdev < 10)
             {
                 retResult = new TrackResult(0, 0, 0, 0, false, stdev);
+#if MY_DEBUG
                 Console.WriteLine("{0}", stdev);
                 Console.WriteLine("타깃없음");
+#endif
             }
             else
             {
                 retResult = new TrackResult(candidateRects[sortedKeys[0]], true, stdev);
+#if MY_DEBUG
                 Console.WriteLine("x = {0}, y = {1}, width = {2}, height = {3}", retResult.X, retResult.Y, retResult.Width, retResult.Height);
+#endif
             }
 #if MY_DEBUG
             // 상위 10% 표시
