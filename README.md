@@ -8,6 +8,6 @@ Through this program, it also make a robot to follow a certain object using mean
 
 Sever-side program (written in python) is run on the robot.
 
+![program](./program.png)
 ![robot1](./robot1.jpg)
 ![robot2](./robot2.jpg)
-![program](./program.png)
